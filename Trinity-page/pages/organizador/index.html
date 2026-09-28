@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de organizador — Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../components/nav.css">
+    <link rel="stylesheet" href="../../components/ui.css">
+    <link rel="stylesheet" href="organizador.css">
+    <link rel="icon" type="image/png" href="../../assets/favicon.ico">
+</head>
+<body class="lite-shell">
+
+<!-- ══ NAV ══ -->
+<script src="../../components/nav.js"></script>
+
+    <!-- ══ SIDEBAR ══ -->
+    <aside class="lite-sidebar">
+        <nav>
+            <a href="#torneos" class="lite-nav-item active">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4ZM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/></svg>
+                Mis torneos
+            </a>
+            <a href="#noticias" class="lite-nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v13a2 2 0 0 1-2 2H8l-4 3V4Z"/><path d="M8 9h8M8 13h5"/></svg>
+                Noticias
+            </a>
+            <a href="../../index.html" class="lite-nav-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Volver al sitio
+            </a>
+        </nav>
+    </aside>
+
+    <!-- ══ CONTENIDO ══ -->
+    <main class="lite-main">
+
+        <section id="torneos">
+            <header class="lite-header">
+                <h1>Mis torneos</h1>
+                <p>Torneos que organizás. Gestioná participantes, inicio y resultados desde el detalle de cada uno.</p>
+            </header>
+
+            <div class="data-table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Torneo</th><th>Disciplina</th><th>Formato</th><th>Estado</th><th>Inscriptos</th><th></th></tr>
+                    </thead>
+                    <tbody id="mis-torneos-body">
+                        <tr><td colspan="6">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="lite-header" style="margin-top:2rem;">
+                <a href="../nav/tournament/crear.html" class="btn-primary">+ Crear torneo</a>
+            </div>
+        </section>
+
+        <section id="noticias" style="margin-top:3rem;">
+            <header class="lite-header">
+                <h2>Noticias</h2>
+                <p>Enviá una noticia para que un admin la revise y la publique.</p>
+            </header>
+
+            <form class="form-card" id="noticia-form" style="max-width:640px;">
+                <div class="field">
+                    <label class="field-label" for="noticia-titulo">Título</label>
+                    <input class="field-input" type="text" id="noticia-titulo" maxlength="160" required>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="noticia-categoria">Categoría</label>
+                    <select class="field-select" id="noticia-categoria">
+                        <option value="torneos">Torneos</option>
+                        <option value="actualizaciones">Actualizaciones</option>
+                        <option value="resultados">Resultados</option>
+                        <option value="comunidad">Comunidad</option>
+                        <option value="anuncios" selected>Anuncios</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="noticia-resumen">Resumen (opcional)</label>
+                    <input class="field-input" type="text" id="noticia-resumen" maxlength="280">
+                </div>
+                <div class="field">
+                    <label class="field-label" for="noticia-contenido">Contenido</label>
+                    <textarea class="field-textarea" id="noticia-contenido" rows="6" required></textarea>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="noticia-imagen">Imagen (opcional)</label>
+                    <input class="field-input" type="file" id="noticia-imagen" accept="image/png,image/jpeg,image/webp">
+                </div>
+                <p id="noticia-msg" class="form-msg" role="status"></p>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary" id="noticia-btn">Enviar para aprobación</button>
+                </div>
+            </form>
+
+            <h3 style="margin-top:2rem;">Mis solicitudes</h3>
+            <div class="data-table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Título</th><th>Categoría</th><th>Estado</th><th>Fecha</th></tr></thead>
+                    <tbody id="mis-noticias-body">
+                        <tr><td colspan="4">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+<!-- Footer inyectado para poder hacerlo en todas las paginas :p-->
+<script src="../../assets/js/api.js"></script>
+<script src="organizador.js"></script>
+<script src="organizador-noticias.js"></script>
+<script src="../../components/footer.js"></script>
+</body>
+</html>

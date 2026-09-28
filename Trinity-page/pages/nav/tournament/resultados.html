@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargar resultados — Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../../components/nav.css">
+    <link rel="stylesheet" href="../../../components/footer.css">
+    <link rel="stylesheet" href="../../../components/ui.css">
+    <link rel="stylesheet" href="resultados.css">
+    <link rel="icon" type="image/png" href="../../../assets/favicon.ico">
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<script src="../../../components/nav.js"></script>
+
+<main>
+<section class="page-hero">
+    <p class="page-eyebrow" id="r-eyebrow">Trinity</p>
+    <h1 class="page-title">Cargar resultados</h1>
+    <p class="page-subtitle">Como organizador, cargá el resultado de cada enfrentamiento jugado.</p>
+    <div class="page-hero-actions">
+        <a href="detalle.html" id="r-volver" class="btn-secondary">← Volver al torneo</a>
+    </div>
+</section>
+
+<section class="content-section" id="r-error" hidden>
+    <p class="no-tournaments" id="r-error-msg"></p>
+</section>
+
+<div id="r-body" hidden>
+
+<!-- ══ SIGUIENTE RONDA (solo suizo) ══ -->
+<section class="content-section" id="r-siguiente-ronda" hidden>
+    <div class="round-card">
+        <div><strong>Ronda actual completa</strong><span class="badge badge-abierto">Lista para avanzar</span></div>
+        <button type="button" class="btn-primary btn-sm" id="r-btn-siguiente-ronda">Generar siguiente ronda</button>
+    </div>
+</section>
+
+<!-- ══ PENDIENTES ══ -->
+<section class="content-section">
+    <h2 class="content-section-title">Enfrentamientos pendientes de resultado</h2>
+    <div id="r-pendientes"></div>
+</section>
+
+<!-- ══ HISTORIAL ══ -->
+<section class="content-section">
+    <h2 class="content-section-title">Historial de resultados cargados</h2>
+    <div class="data-table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Ronda</th><th>Participante A</th><th>Resultado</th><th>Participante B</th></tr>
+            </thead>
+            <tbody id="r-historial-body">
+                <tr><td colspan="4">Cargando...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+</div>
+
+</main>
+
+<script src="../../../assets/js/api.js"></script>
+<script src="resultados.js"></script>
+<script src="../../../components/footer.js"></script>
+</body>
+</html>

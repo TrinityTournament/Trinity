@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabla de posiciones — Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../../../components/nav.css">
+    <link rel="stylesheet" href="../../../../components/footer.css">
+    <link rel="stylesheet" href="../../../../components/ui.css">
+    <link rel="stylesheet" href="formatos.css">
+    <link rel="icon" type="image/png" href="../../../../assets/favicon.ico">
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<script src="../../../../components/nav.js"></script>
+
+<main>
+<section class="page-hero">
+    <p class="page-eyebrow" id="f-eyebrow">Trinity</p>
+    <h1 class="page-title">Tabla de posiciones</h1>
+    <p class="page-subtitle">Formato liga: todos los participantes juegan entre sí una vez.</p>
+    <div class="page-hero-actions">
+        <a href="../detalle.html" id="f-volver" class="btn-secondary">← Volver al torneo</a>
+    </div>
+</section>
+
+<section class="content-section" id="f-body" hidden>
+    <div class="data-table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>#</th><th>Participante</th><th>PJ</th><th>PG</th><th>PE</th><th>PP</th><th>Pts</th></tr>
+            </thead>
+            <tbody id="f-tabla-body"></tbody>
+        </table>
+    </div>
+    <p class="form-note">PJ: jugados · PG: ganados · PE: empatados · PP: perdidos · Pts: puntos.</p>
+
+    <h2 class="content-section-title" style="margin-top:2.5rem;">Calendario</h2>
+    <div id="f-calendario"></div>
+</section>
+
+<section class="content-section" id="f-error" hidden>
+    <p class="no-tournaments" id="f-error-msg"></p>
+</section>
+
+</main>
+
+<script src="../../../../assets/js/api.js"></script>
+<script src="liga.js"></script>
+<script src="../../../../components/footer.js"></script>
+</body>
+</html>

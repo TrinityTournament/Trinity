@@ -1,0 +1,453 @@
+-- ═══════════════════════════════════════════════════════════════════
+--  TRINITY — Esquema relacional (MySQL 8.0+ / MariaDB 10.5+)
+-- ═══════════════════════════════════════════════════════════════════
+--
+--  NORMALIZACIÓN (forma normal aplicada por tabla)
+--  ------------------------------------------------------------------
+--
+--  Todas las tablas cumplen 1FN (atributos atómicos, sin grupos
+--  repetitivos), 2FN (no hay dependencias parciales — todas las claves
+--  primarias son de un solo atributo) y 3FN (ningún atributo no clave
+--  depende de otro atributo no clave; toda la información sobre un
+--  usuario vive en `usuarios`, toda invitación vive en su propia fila,
+--  etc.).
+--
+--  Las relaciones N:M se resuelven con tablas de unión dedicadas:
+--    · seguidores          → relación N:M usuario-usuario (follows)
+--    · cuentas_videojuego  → relación N:M usuario-videojuego
+--  en vez de columnas repetidas o listas separadas por comas.
+--
+--  EXCEPCIÓN DELIBERADA (denormalización controlada):
+--  `usuarios.deportes_seleccionados` y `usuarios.videojuegos_seleccionados`
+--  guardan un array JSON en vez de vivir en tablas de unión propias
+--  (usuario_deporte, usuario_videojuego). Se documenta como decisión
+--  consciente: es una lista acotada (≤10 ítems) de un catálogo fijo
+--  de opciones que se valida en la capa de aplicación
+--  (ver ProfileService::DEPORTES_VALIDOS / JUEGOS_VALIDOS), se lee y
+--  escribe siempre en conjunto (nunca se filtra "todos los usuarios
+--  que juegan tenis" con una query SQL), y MySQL 8 soporta
+--  JSON_CONTAINS() para las pocas consultas que sí necesitan filtrar
+--  por ese campo (ver TournamentService::notify / target=deporte).
+--  Si en una futura entrega se necesitara reportar/filtrar masivamente
+--  por deporte, el camino natural es migrar a una tabla de unión.
+--
+-- ═══════════════════════════════════════════════════════════════════
+--  CLAVES FORÁNEAS Y BORRADO EN CASCADA
+--  ------------------------------------------------------------------
+--
+--  Todas las FK usan ON DELETE CASCADE: si se elimina un usuario
+--  (delete-account.php), desaparecen automáticamente sus tokens de
+--  reset, sus relaciones de seguimiento, sus cuentas de videojuego
+--  vinculadas y sus notificaciones. Esto evita filas huérfanas sin
+--  necesidad de borrados manuales en cada endpoint.
+--
+-- ═══════════════════════════════════════════════════════════════════
+
+CREATE DATABASE IF NOT EXISTS trinity
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE trinity;
+
+-- ── TABLA: usuarios ───────────────────────────────────────────────
+-- Entidad central. PK autoincremental de un solo atributo (2FN).
+-- email/usuario/telefono son NULL-ables pero UNIQUE: el registro
+-- mínimo solo exige uno de los dos contactos (ver VerificationService).
+
+CREATE TABLE IF NOT EXISTS usuarios (
+    id                          INT UNSIGNED      NOT NULL AUTO_INCREMENT,
+    nombre                      VARCHAR(120)      NOT NULL,
+    fecha_nacimiento            DATE              NULL,
+    usuario                     VARCHAR(60)       NOT NULL,
+    tipo                        ENUM('deportes','videojuegos') NULL,
+    deportes_seleccionados      JSON              NULL,
+    videojuegos_seleccionados   JSON              NULL,
+    futbol_rol                  VARCHAR(40)       NULL,
+    futbol_numero               TINYINT UNSIGNED  NULL,
+    futbol_equipo               VARCHAR(100)      NULL,
+    mc_estilo                   VARCHAR(40)       NULL,
+    mc_estrategia               VARCHAR(255)      NULL,
+    mc_especialidad             VARCHAR(40)       NULL,
+    mc_modos                    JSON              NULL,
+    password                    VARCHAR(255)      NOT NULL,
+    email                       VARCHAR(180)      NULL,
+    telefono                    VARCHAR(30)       NULL,
+    pronouns                    VARCHAR(30)       NULL,
+    descripcion                 VARCHAR(500)      NULL,
+    foto_url                    MEDIUMTEXT        NULL,
+    torneos_jugados             INT UNSIGNED      NOT NULL DEFAULT 0,
+    torneos_ganados             INT UNSIGNED      NOT NULL DEFAULT 0,
+    notif_whatsapp              TINYINT(1)        NOT NULL DEFAULT 0,
+    rol                         ENUM('admin','organizador','participante') NOT NULL DEFAULT 'participante',
+    creado_en                   TIMESTAMP         NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_email    (email),
+    UNIQUE KEY uq_usuario  (usuario),
+    UNIQUE KEY uq_telefono (telefono)
+
+    -- Nota: uq_email / uq_usuario / uq_telefono ya son índices por sí
+    -- solas (toda UNIQUE KEY es un índice) — no se agregan índices
+    -- adicionales redundantes sobre las mismas columnas.
+
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+-- ── TABLA: password_resets ────────────────────────────────────────
+-- Un token de un solo uso por solicitud de recuperación de contraseña.
+-- Relación 1:N con usuarios (un usuario puede tener varios tokens
+-- históricos; solo el más reciente y no usado es válido).
+
+CREATE TABLE IF NOT EXISTS password_resets (
+    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    usuario_id  INT UNSIGNED NOT NULL,
+    token       VARCHAR(64)  NOT NULL,
+    expira_en   DATETIME     NOT NULL,
+    usado       TINYINT(1)   NOT NULL DEFAULT 0,
+    creado_en   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_token (token),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+-- ── TABLA: seguidores ─────────────────────────────────────────────
+-- Tabla de unión para la relación N:M reflexiva usuario→usuario
+-- ("sigue a"). La UNIQUE compuesta evita duplicar el mismo follow.
+
+CREATE TABLE IF NOT EXISTS seguidores (
+    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    seguidor_id INT UNSIGNED NOT NULL,
+    seguido_id  INT UNSIGNED NOT NULL,
+    creado_en   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_seguidor_seguido (seguidor_id, seguido_id),
+    FOREIGN KEY (seguidor_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (seguido_id)  REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+-- ── TABLA: codigos_verificacion ───────────────────────────────────
+-- NOTA DE DISEÑO: esta tabla existe para persistir códigos OTP de
+-- forma auditable (registro, cambio de credencial, cambio de
+-- contraseña). La implementación actual de VerificationService
+-- guarda el código en la sesión PHP del usuario (igual que el diseño
+-- original), suficiente para el alcance de esta entrega y sin
+-- infraestructura adicional. La tabla queda modelada y lista para
+-- que una futura entrega persista los códigos acá en lugar de en
+-- sesión (auditoría, multi-dispositivo, expiración centralizada en
+-- DB en vez de en memoria del proceso PHP).
+
+CREATE TABLE IF NOT EXISTS codigos_verificacion (
+    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    destino     VARCHAR(180) NOT NULL,   -- email o telefono
+    codigo      VARCHAR(10)  NOT NULL,
+    tipo        VARCHAR(40)  NOT NULL,   -- 'registro', 'cambio_credencial', 'cambio_password'
+    expira_en   DATETIME     NOT NULL,
+    usado       TINYINT(1)   NOT NULL DEFAULT 0,
+    creado_en   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+-- ── TABLA: cuentas_videojuego ─────────────────────────────────────
+-- Tabla de unión para la relación N:M usuario↔videojuego: un usuario
+-- puede vincular varias cuentas (una por juego) y cada juego admite
+-- una cuenta vinculada por usuario. 'juego' es un slug fijo
+-- ('clashroyale', 'brawlstars', 'fortnite', 'minecraft', ...) para
+-- poder sumar más videojuegos sin alterar el esquema.
+
+CREATE TABLE IF NOT EXISTS cuentas_videojuego (
+    id              INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    usuario_id      INT UNSIGNED NOT NULL,
+    juego           VARCHAR(40)  NOT NULL,
+    identificador   VARCHAR(60)  NOT NULL,  -- tag de CR, nombre de Fortnite, UUID de Minecraft, etc.
+    actualizado_en  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    creado_en       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_usuario_juego (usuario_id, juego),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+-- ── TABLA: notificaciones ─────────────────────────────────────────
+-- Relación 1:N usuario→notificaciones. El índice compuesto acelera
+-- el caso de uso más frecuente: "notificaciones no leídas de este
+-- usuario, más recientes primero" (ver NotificationModel::paginatedForUser).
+
+CREATE TABLE IF NOT EXISTS notificaciones (
+    id          INT UNSIGNED    NOT NULL AUTO_INCREMENT,
+    usuario_id  INT UNSIGNED    NOT NULL,
+    tipo        VARCHAR(60)     NOT NULL,
+    titulo      VARCHAR(200)    NOT NULL,
+    mensaje     TEXT            NOT NULL,
+    link        VARCHAR(500)    NULL,
+    leido       TINYINT(1)      NOT NULL DEFAULT 0,
+    creado_en   TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_notif_usuario (usuario_id, leido, creado_en),
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+
+-- ═══════════════════════════════════════════════════════════════════
+--  NOTA SOBRE CONTRASEÑAS
+--  El campo `usuarios.password` guarda el hash generado por
+--  password_hash($plain, PASSWORD_BCRYPT) en PHP. Nunca se guardan
+--  contraseñas en texto plano ni se las puede leer de vuelta.
+-- ═══════════════════════════════════════════════════════════════════
+
+
+-- ═══════════════════════════════════════════════════════════════════
+--  MÓDULO DE TORNEOS
+--  Antes quedaba fuera de alcance (ver TournamentModel, que respondía
+--  501 de forma controlada mientras no existían estas tablas). Cubre
+--  crear/buscar/inscribirse/invitar. Los brackets/resultados quedan
+--  para una entrega futura — por ahora `estado` solo trackea el ciclo
+--  de vida general del torneo, no el avance de partidos.
+-- ═══════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS torneos (
+    id                  INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+    organizador_id      INT UNSIGNED  NOT NULL,
+    titulo              VARCHAR(120)  NOT NULL,
+    deporte             VARCHAR(60)   NOT NULL,
+    descripcion         VARCHAR(1000) NULL,
+    formato             ENUM('liga','eliminacion','suizo') NOT NULL,
+    max_participantes   INT UNSIGNED  NOT NULL,
+    fecha_inicio        DATE          NOT NULL,
+    visibilidad         ENUM('publico','privado') NOT NULL DEFAULT 'publico',
+    banner_url          MEDIUMTEXT    NULL,
+    estado              ENUM('en_creacion','abierto','en_curso','finalizado','cancelado') NOT NULL DEFAULT 'en_creacion',
+    creado_en           TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_organizador (organizador_id, estado),
+    INDEX idx_publico (visibilidad, estado, fecha_inicio),
+
+    FOREIGN KEY (organizador_id) REFERENCES usuarios(id) ON DELETE CASCADE
+
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS torneo_participantes (
+    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    torneo_id   INT UNSIGNED NOT NULL,
+    usuario_id  INT UNSIGNED NOT NULL,
+    inscrito_en TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_torneo_usuario (torneo_id, usuario_id),
+    FOREIGN KEY (torneo_id)  REFERENCES torneos(id)  ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS torneo_invitaciones (
+    id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    torneo_id      INT UNSIGNED NOT NULL,
+    organizador_id INT UNSIGNED NOT NULL,
+    invitado_id    INT UNSIGNED NOT NULL,
+    estado         ENUM('pendiente','aceptada','rechazada') NOT NULL DEFAULT 'pendiente',
+    creado_en      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+
+    INDEX idx_invitado (invitado_id, estado),
+
+    FOREIGN KEY (torneo_id)      REFERENCES torneos(id)   ON DELETE CASCADE,
+    FOREIGN KEY (organizador_id) REFERENCES usuarios(id)  ON DELETE CASCADE,
+    FOREIGN KEY (invitado_id)    REFERENCES usuarios(id)  ON DELETE CASCADE
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+-- ═══════════════════════════════════════════════════════════════════
+--  MÓDULO DE SOLICITUDES DE ORGANIZADOR
+--  Solicitudes para convertirse en organizador.
+--  El usuario acepta los términos, se crea la solicitud y los admins
+--  pueden aprobarla o rechazarla. Al resolverla se registra quién y
+--  cuándo la resolvió.
+-- ═══════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS solicitudes_organizador (
+    id                     INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    usuario_id             INT UNSIGNED NOT NULL,
+    estado                 ENUM('pendiente','aprobado','rechazado') NOT NULL DEFAULT 'pendiente',
+    terminos_aceptados_en  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    resuelto_por           INT UNSIGNED NULL,
+    resuelto_en            TIMESTAMP NULL,
+    creado_en              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_usuario_estado (usuario_id, estado),
+    CONSTRAINT fk_solicitud_usuario FOREIGN KEY (usuario_id)
+        REFERENCES usuarios(id) ON DELETE CASCADE,
+    CONSTRAINT fk_solicitud_admin FOREIGN KEY (resuelto_por)
+        REFERENCES usuarios(id) ON DELETE SET NULL
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+-- ═══════════════════════════════════════════════════════════════════
+--  MÓDULO DE PARTIDOS (calendario, resultados, llaves, posiciones)
+--  Una fila = un enfrentamiento entre dos participantes de un torneo.
+--  - Eliminación directa: se genera el cuadro completo al iniciar el
+--    torneo (todas las rondas, con "TBD" en las que dependen de un
+--    resultado previo). ronda/orden definen la forma del cuadro: el
+--    partido `orden` de la ronda R avanza al partido `orden div 2` de
+--    la ronda R+1 (participante1 si orden es par, participante2 si es
+--    impar) — no hace falta una columna aparte para esto.
+--  - Liga: se genera el calendario completo (todos contra todos) al
+--    iniciar, agrupado en fechas (ronda = número de fecha) con el
+--    método del círculo para que nadie juegue dos veces la misma fecha.
+--  - Suizo: se genera una ronda a la vez — la ronda 2 en adelante
+--    depende de los puntajes acumulados hasta ese momento, así que no
+--    se puede generar todo de antemano.
+--  estado='wo' es un walkover (el rival no existe — cuadro con bye):
+--  se resuelve solo al generar el cuadro, sin necesidad de que el
+--  organizador cargue un resultado.
+-- ═══════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS partidos (
+    id                 INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+    torneo_id          INT UNSIGNED  NOT NULL,
+    ronda              INT UNSIGNED  NOT NULL,
+    ronda_etiqueta     VARCHAR(40)   NOT NULL,
+    orden              INT UNSIGNED  NOT NULL DEFAULT 0,
+    participante1_id   INT UNSIGNED  NULL,
+    participante2_id   INT UNSIGNED  NULL,
+    resultado1         INT UNSIGNED  NULL,
+    resultado2         INT UNSIGNED  NULL,
+    ganador_id         INT UNSIGNED  NULL,
+    estado             ENUM('pendiente','jugado','wo') NOT NULL DEFAULT 'pendiente',
+    fecha_programada   DATETIME      NULL,
+    creado_en          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_torneo_ronda (torneo_id, ronda, orden),
+
+    FOREIGN KEY (torneo_id)        REFERENCES torneos(id)  ON DELETE CASCADE,
+    FOREIGN KEY (participante1_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+    FOREIGN KEY (participante2_id) REFERENCES usuarios(id) ON DELETE SET NULL,
+    FOREIGN KEY (ganador_id)       REFERENCES usuarios(id) ON DELETE SET NULL
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+--  No hay tabla `rankings` propia y es deliberado: la posición se
+--  calcula al vuelo sobre usuarios.torneos_ganados / torneos_jugados
+--  (ya existentes) y, para el filtro por disciplina, sobre
+--  usuarios.deportes_seleccionados / videojuegos_seleccionados con
+--  JSON_CONTAINS (mismo patrón que UserModel::findTargetedBySport).
+--  Guardar el ranking en una tabla aparte sería denormalización sin
+--  necesidad: el dato de origen ya vive en `usuarios` y no hay un
+--  cálculo pesado detrás (sin bracket/resultados todavía, torneos_*
+--  son contadores simples). Ver RankingModel::top().
+-- ═══════════════════════════════════════════════════════════════════
+
+-- ═══════════════════════════════════════════════════════════════════
+--  MÓDULO DE NOTICIAS
+--  El admin publica directo (estado='publicada' al crear). Un
+--  organizador solo puede crear en estado='pendiente': queda a la
+--  espera de que un admin la apruebe o rechace (resuelto_por/
+--  resuelto_en, mismo patrón que solicitudes_organizador).
+-- ═══════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS noticias (
+    id            INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+    autor_id      INT UNSIGNED  NOT NULL,
+    titulo        VARCHAR(160)  NOT NULL,
+    resumen       VARCHAR(280)  NULL,
+    contenido     TEXT          NOT NULL,
+    categoria     ENUM('torneos','actualizaciones','resultados','comunidad','anuncios') NOT NULL DEFAULT 'anuncios',
+    imagen_url    VARCHAR(64)   NULL,
+    estado        ENUM('pendiente','publicada','rechazada') NOT NULL DEFAULT 'pendiente',
+    resuelto_por  INT UNSIGNED  NULL,
+    resuelto_en   TIMESTAMP     NULL,
+    publicado_en  TIMESTAMP     NULL,
+    creado_en     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_publicas (estado, publicado_en),
+    INDEX idx_autor (autor_id, estado),
+
+    FOREIGN KEY (autor_id)     REFERENCES usuarios(id) ON DELETE CASCADE,
+    FOREIGN KEY (resuelto_por) REFERENCES usuarios(id) ON DELETE SET NULL
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+-- ═══════════════════════════════════════════════════════════════════
+--  MÓDULO DE CONTACTO
+--  usuario_id queda NULL si el formulario lo completa alguien sin
+--  sesión iniciada (el form de contacto no exige estar logueado).
+-- ═══════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS mensajes_contacto (
+    id         INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+    usuario_id INT UNSIGNED  NULL,
+    nombre     VARCHAR(120)  NOT NULL,
+    contacto   VARCHAR(180)  NOT NULL,
+    asunto     VARCHAR(160)  NOT NULL,
+    mensaje    VARCHAR(2000) NOT NULL,
+    leido      TINYINT(1)    NOT NULL DEFAULT 0,
+    creado_en  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_leido (leido, creado_en),
+
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+-- ═══════════════════════════════════════════════════════════════════
+--  MÓDULO DE EQUIPOS
+--  `equipo_miembros` es la tabla de unión N:M usuario↔equipo. El
+--  capitán queda también como fila en esta tabla (rol='capitan',
+--  estado='activo' desde la creación) para no duplicar esa
+--  información en dos lugares — equipos.capitan_id existe aparte
+--  solo para poder validar "quién puede editar/invitar" sin tener
+--  que filtrar equipo_miembros por rol en cada chequeo de permisos.
+--  Igual que en torneos, la integración equipo↔torneo (inscribir un
+--  equipo entero a un torneo) queda para una entrega futura — por
+--  ahora la inscripción a torneos es individual.
+-- ═══════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS equipos (
+    id          INT UNSIGNED  NOT NULL AUTO_INCREMENT,
+    nombre      VARCHAR(100)  NOT NULL,
+    disciplina  VARCHAR(60)   NOT NULL,
+    descripcion VARCHAR(500)  NULL,
+    logo_url    VARCHAR(64)   NULL,
+    capitan_id  INT UNSIGNED  NOT NULL,
+    creado_en   TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_capitan (capitan_id),
+
+    FOREIGN KEY (capitan_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS equipo_miembros (
+    id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    equipo_id  INT UNSIGNED NOT NULL,
+    usuario_id INT UNSIGNED NOT NULL,
+    rol        ENUM('capitan','jugador','suplente') NOT NULL DEFAULT 'jugador',
+    estado     ENUM('invitado','activo') NOT NULL DEFAULT 'invitado',
+    creado_en  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_equipo_usuario (equipo_id, usuario_id),
+    INDEX idx_usuario (usuario_id, estado),
+
+    FOREIGN KEY (equipo_id)  REFERENCES equipos(id)  ON DELETE CASCADE,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscar torneos — Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../../components/nav.css">
+    <link rel="stylesheet" href="../../../components/footer.css">
+    <link rel="stylesheet" href="../../../components/ui.css">
+    <link rel="stylesheet" href="buscar.css">
+    <link rel="icon" type="image/png" href="../../../assets/favicon.ico">
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<script src="../../../components/nav.js"></script>
+
+<main>
+<!-- ══ HERO ══ -->
+<section class="page-hero">
+    <p class="page-eyebrow">Trinity · Torneos</p>
+    <h1 class="page-title">Buscar torneos</h1>
+    <p class="page-subtitle">
+        Encontrá torneos abiertos de deportes, juegos de mesa y videojuegos.
+        Filtrá por disciplina, formato y estado para encontrar el tuyo.
+    </p>
+</section>
+
+<!-- ══ FILTROS ══ -->
+<section class="content-section search-filters-section">
+    <form class="search-filters" id="search-form">
+        <div class="field search-field-grow">
+            <label class="field-label" for="f-texto">Buscar</label>
+            <input class="field-input" type="text" id="f-texto" placeholder="Nombre del torneo, juego o deporte...">
+        </div>
+
+        <div class="field">
+            <label class="field-label" for="f-disciplina">Disciplina</label>
+            <select class="field-select" id="f-disciplina">
+                <option value="">Todas</option>
+                <option>Fútbol</option>
+                <option>Brawl Stars</option>
+                <option>Clash Royale</option>
+                <option>Free Fire</option>
+                <option>Fortnite</option>
+                <option>Minecraft</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label class="field-label" for="f-formato">Formato</label>
+            <select class="field-select" id="f-formato">
+                <option value="">Todos</option>
+                <option>Liga</option>
+                <option>Eliminación directa</option>
+                <option>Sistema suizo</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label class="field-label" for="f-estado">Estado</label>
+            <select class="field-select" id="f-estado">
+                <option value="">Todos</option>
+                <option>Abierto</option>
+                <option>En curso</option>
+                <option>Finalizado</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn-primary search-submit">Buscar</button>
+    </form>
+</section>
+
+<!-- ══ RESULTADOS ══ -->
+<section class="content-section">
+    <header class="results-head">
+        <h2 class="content-section-title">Torneos</h2>
+        <span class="results-count" id="results-count"></span>
+    </header>
+
+    <div class="grid-cards" id="results-grid">
+        <div class="loading-spinner" style="margin:3rem auto;"></div>
+    </div>
+
+    <nav class="pagination" aria-label="Paginación de resultados" id="pagination" hidden>
+        <button class="btn-secondary btn-sm" id="btn-prev-page">← Anterior</button>
+        <span class="pagination-info" id="pagination-info">Página 1 de 1</span>
+        <button class="btn-secondary btn-sm" id="btn-next-page">Siguiente →</button>
+    </nav>
+</section>
+
+</main>
+
+<script src="../../../assets/js/api.js"></script>
+<script src="buscar.js"></script>
+<script src="../../../components/footer.js"></script>
+</body>
+</html>

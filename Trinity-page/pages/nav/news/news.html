@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noticias — Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../../components/nav.css">
+    <link rel="stylesheet" href="../../../components/footer.css">
+    <link rel="stylesheet" href="../../../components/ui.css">
+    <link rel="stylesheet" href="news.css">
+    <link rel="icon" type="image/png" href="../../../assets/favicon.ico">
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<script src="../../../components/nav.js"></script>
+
+<main>
+<!-- ══ HERO ══ -->
+<section class="page-hero">
+    <p class="page-eyebrow">Trinity · Noticias</p>
+    <h1 class="page-title">Últimas novedades</h1>
+    <p class="page-subtitle">
+        Enterate de nuevos torneos, actualizaciones, resultados y anuncios de la comunidad.
+    </p>
+</section>
+
+<!-- ══ FILTROS ══ -->
+<div class="filters-wrap">
+    <div class="filters-scroll" id="news-filters">
+        <span class="filter-pill active" data-categoria="">Todas</span>
+        <span class="filter-pill" data-categoria="torneos">Torneos</span>
+        <span class="filter-pill" data-categoria="actualizaciones">Actualizaciones</span>
+        <span class="filter-pill" data-categoria="resultados">Resultados</span>
+        <span class="filter-pill" data-categoria="comunidad">Comunidad</span>
+        <span class="filter-pill" data-categoria="anuncios">Anuncios</span>
+    </div>
+</div>
+
+<!-- ══ NOTICIA DESTACADA ══ -->
+<section class="content-section news-featured-section" id="news-featured-section" hidden>
+    <article class="news-featured" id="news-featured"></article>
+</section>
+
+<!-- ══ ÚLTIMAS NOTICIAS ══ -->
+<section class="content-section">
+    <h2 class="content-section-title">Últimas noticias</h2>
+    <div class="grid-cards news-grid" id="news-grid">
+        <p class="no-tournaments">Cargando noticias...</p>
+    </div>
+</section>
+</main>
+
+<!-- ══ MODAL DE LECTURA ══ -->
+<div class="modal-overlay" id="news-modal" hidden>
+    <div class="modal-box news-modal-box">
+        <button type="button" class="modal-close" id="news-modal-close" aria-label="Cerrar">✕</button>
+        <div id="news-modal-body"></div>
+    </div>
+</div>
+
+<script src="../../../assets/js/api.js"></script>
+<script src="news.js"></script>
+<script src="../../../components/footer.js"></script>
+
+</body>
+</html>

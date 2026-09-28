@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil — Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="profile.css">
+    <link rel="icon" type="image/png" href="../../../assets/favicon.ico">
+    <link rel="stylesheet" href="../../../components/nav.css">
+    <link rel="stylesheet" href="../../../components/footer.css">
+</head>
+<body>
+
+<script src="../../../components/nav.js"></script>
+
+<!-- ══ MAIN LAYOUT ══ -->
+<main class="profile-layout">
+
+    <!-- COLUMNA IZQUIERDA: CARD DE PERFIL -->
+    <aside class="profile-card" id="profile-card">
+        <div class="profile-photo-wrap">
+            <div class="profile-photo" id="profile-photo">?</div>
+        </div>
+        <div class="profile-card-info">
+            <h1 class="profile-card-name" id="profile-name">Cargando…</h1>
+            <p class="profile-card-user" id="profile-username"></p>
+            <p class="profile-card-pronouns" id="profile-pronouns" hidden></p>
+
+            <div id="owner-actions" style="display:none;">
+                <a href="../cfg/edit.html" class="btn-edit-profile">Editar perfil</a>
+            </div>
+            <div id="other-actions" style="display:none;">
+                <button class="btn-follow" id="btn-follow" type="button">Seguir</button>
+            </div>
+
+            <button class="profile-followers followers-btn" type="button" id="btn-followers" hidden>
+                <span id="count-seguidos">0</span> Seguidos
+                <span class="fp-sep">·</span>
+                <span id="count-seguidores">0</span> Seguidores
+            </button>
+
+            <div class="profile-divider"></div>
+            <p class="profile-desc" id="profile-desc"></p>
+
+            <div class="profile-stats" id="profile-stats" hidden>
+                <div class="profile-divider"></div>
+                <p class="stat-line" id="stat-jugados">0 Torneos</p>
+                <p class="stat-line" id="stat-ganados">0 Torneos ganados</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- COLUMNA DERECHA: CONTENIDO -->
+    <section class="profile-content">
+
+        <!-- ESTADO DE CARGA / ERROR -->
+        <div id="profile-loading" style="display:flex;align-items:center;justify-content:center;min-height:280px;">
+            <div class="loading-spinner"></div>
+        </div>
+        <p class="no-tournaments" id="profile-error" hidden></p>
+
+        <!-- PREFERENCIAS (deportes + videojuegos favoritos, una sola fila de 3) -->
+        <section id="section-preferencias" hidden>
+            <header class="section-header">
+                <h2 class="section-label">Preferencias</h2>
+                <div class="section-actions" id="preferencias-actions" style="display:none;">
+                    <a href="../cfg/edit.html" class="btn-section-action">Editar</a>
+                </div>
+            </header>
+            <div class="favorites-wrap" id="preferencias-wrap">
+                <div class="favorites-grid" id="grid-preferencias"></div>
+            </div>
+        </section>
+
+        <!-- CUENTAS DE VIDEOJUEGO VINCULADAS (solo perfil propio) -->
+        <section id="gamelink-section" hidden>
+            <header class="section-header">
+                <h2 class="section-label">Cuentas vinculadas</h2>
+                <div class="section-actions">
+                    <a href="../cfg/edit.html" class="btn-section-action">Vincular más</a>
+                </div>
+            </header>
+            <div class="gamelink-grid" id="gamelink-grid"></div>
+        </section>
+
+    </section>
+</main>
+
+<!-- ══ MODAL: PANEL DE ESTADÍSTICAS DE UNA PREFERENCIA ══ -->
+<div class="modal-overlay" id="stats-modal">
+    <div class="modal-box stats-modal-box">
+        <button type="button" class="modal-close" id="stats-modal-close" aria-label="Cerrar">&times;</button>
+        <div id="stats-modal-content">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+</div>
+
+<script src="../../../assets/js/api.js"></script>
+<script src="view.js"></script>
+<script src="../../../components/footer.js"></script>
+</body>
+</html>

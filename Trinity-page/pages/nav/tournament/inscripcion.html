@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscripción — Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../../components/nav.css">
+    <link rel="stylesheet" href="../../../components/footer.css">
+    <link rel="stylesheet" href="../../../components/ui.css">
+    <link rel="stylesheet" href="inscripcion.css">
+    <link rel="icon" type="image/png" href="../../../assets/favicon.ico">
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<script src="../../../components/nav.js"></script>
+
+<main>
+<section class="page-hero">
+    <p class="page-eyebrow">Trinity · Inscripción</p>
+    <h1 class="page-title">Inscribirme al torneo</h1>
+    <p class="page-subtitle">Confirmá tus datos para participar en el torneo.</p>
+</section>
+
+<section class="content-section inscripcion-layout" id="ins-body" hidden>
+
+    <aside class="tournament-summary">
+        <div class="entity-banner" id="ins-banner" style="background-image:linear-gradient(135deg, rgba(192,0,10,.5), rgba(0,0,0,.6)); background-size:cover; background-position:center; border-radius: 12px 12px 0 0;">
+            <span class="badge" id="ins-badge-estado">…</span>
+        </div>
+        <div class="tournament-summary-body">
+            <h3 id="ins-titulo">Cargando...</h3>
+            <dl class="info-facts">
+                <div><dt>Formato</dt><dd id="ins-formato">—</dd></div>
+                <div><dt>Cupo</dt><dd id="ins-cupo">—</dd></div>
+                <div><dt>Inicio</dt><dd id="ins-fecha">—</dd></div>
+            </dl>
+        </div>
+    </aside>
+
+    <form class="form-card inscripcion-form" id="ins-form">
+
+        <p class="form-note">
+            Te inscribís con tu propio usuario de Trinity (@<span id="ins-usuario-actual">vos</span>).
+            La inscripción por equipos se habilita en una próxima entrega.
+        </p>
+
+        <label class="checkline">
+            <input type="checkbox" id="ins-reglamento">
+            <span>Leí y acepto el reglamento del torneo y las normas de conducta de Trinity.</span>
+        </label>
+
+        <p id="ins-msg" class="form-msg" role="status"></p>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary" id="ins-btn-confirmar">Confirmar inscripción</button>
+            <a href="detalle.html" id="ins-btn-cancelar" class="btn-secondary">Cancelar</a>
+        </div>
+    </form>
+
+</section>
+
+<section class="content-section" id="ins-error" hidden>
+    <p class="no-tournaments" id="ins-error-msg"></p>
+</section>
+
+</main>
+
+<script src="../../../assets/js/api.js"></script>
+<script src="inscripcion.js"></script>
+<script src="../../../components/footer.js"></script>
+</body>
+</html>

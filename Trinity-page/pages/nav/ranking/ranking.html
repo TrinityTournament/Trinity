@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rankings — Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../../components/nav.css">
+    <link rel="stylesheet" href="../../../components/footer.css">
+    <link rel="stylesheet" href="ranking.css">
+    <link rel="icon" type="image/png" href="../../../assets/favicon.ico">
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<script src="../../../components/nav.js"></script>
+
+<main>
+<!-- ══ HERO ══ -->
+<section class="ranking-hero">
+    <header class="ranking-hero-content">
+        <p class="ranking-eyebrow">Trinity · Rankings</p>
+        <h1 class="ranking-title">Tabla de posiciones</h1>
+        <p class="ranking-subtitle">
+            Elegí un juego para ver quién va liderando. El orden se
+            calcula por torneos ganados.
+        </p>
+    </header>
+</section>
+
+<!-- ══ FILTROS ══ -->
+<nav class="filters-wrap" aria-label="Filtrar ranking por juego">
+    <div class="filters-scroll" id="filters-scroll">
+        <span class="filter-pill active" data-disciplina=""><span class="fp-emoji">🏆</span> Todos</span>
+        <span class="filter-pill" data-disciplina="Clash Royale"><span class="fp-emoji">⚔️</span> Clash Royale</span>
+        <span class="filter-pill" data-disciplina="Fortnite"><span class="fp-emoji">🏗️</span> Fortnite</span>
+        <span class="filter-pill" data-disciplina="Fútbol"><span class="fp-emoji">⚽</span> Fútbol</span>
+        <span class="filter-pill" data-disciplina="Brawl Stars"><span class="fp-emoji">💎</span> Brawl Stars</span>
+        <span class="filter-pill" data-disciplina="Minecraft"><span class="fp-emoji">⛏️</span> Minecraft</span>
+        <span class="filter-pill" data-disciplina="Free Fire"><span class="fp-emoji">🧊</span> Free Fire</span>
+    </div>
+</nav>
+
+<!-- ══ RANKING ══ -->
+<section class="section">
+    <header class="section-header">
+        <h2 class="section-title">Top jugadores</h2>
+        <span class="section-hint">Por torneos ganados</span>
+    </header>
+
+    <div class="podium" id="podium"></div>
+
+    <div class="rank-list" id="rank-list"></div>
+</section>
+
+</main>
+
+<script src="../../../assets/js/api.js"></script>
+<script src="ranking.js"></script>
+<script src="../../../components/footer.js"></script>
+
+</body>
+</html>

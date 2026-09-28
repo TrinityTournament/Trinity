@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipo — Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../components/nav.css">
+    <link rel="stylesheet" href="../../components/footer.css">
+    <link rel="stylesheet" href="../../components/ui.css">
+    <link rel="stylesheet" href="teams.css">
+    <link rel="icon" type="image/png" href="../../assets/favicon.ico">
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<script src="../../components/nav.js"></script>
+
+<main>
+<div id="eq-error" class="content-section" hidden>
+    <p class="no-tournaments" id="eq-error-msg"></p>
+</div>
+
+<div id="eq-body" hidden>
+
+<!-- ══ HEADER DEL EQUIPO ══ -->
+<header class="team-header">
+    <div class="team-header-logo" id="eq-logo">?</div>
+    <div class="team-header-info">
+        <h1 class="page-title" id="eq-nombre">Cargando...</h1>
+        <p class="page-subtitle" id="eq-sub">—</p>
+    </div>
+    <div class="team-stats">
+        <div class="team-stat"><strong id="eq-stat-miembros">—</strong><span>Miembros</span></div>
+    </div>
+    <div class="page-hero-actions" id="eq-actions"></div>
+</header>
+
+<!-- ══ INVITAR (solo capitán) ══ -->
+<section class="content-section" id="eq-panel-invitar" hidden>
+    <h2 class="content-section-title">Invitar miembro</h2>
+    <div class="form-card">
+        <div class="field-row cols-2">
+            <div class="field">
+                <label class="field-label" for="eq-inv-usuario">Usuario</label>
+                <input class="field-input" type="text" id="eq-inv-usuario" placeholder="Sin @...">
+            </div>
+            <div class="field">
+                <label class="field-label" for="eq-inv-rol">Rol</label>
+                <select class="field-select" id="eq-inv-rol">
+                    <option value="jugador">Jugador</option>
+                    <option value="suplente">Suplente</option>
+                </select>
+            </div>
+        </div>
+        <p id="eq-inv-msg" class="form-msg" role="status"></p>
+        <div class="form-actions">
+            <button type="button" class="btn-primary" id="eq-inv-btn">Enviar invitación</button>
+        </div>
+    </div>
+</section>
+
+<!-- ══ EDITAR (solo capitán) ══ -->
+<section class="content-section" id="eq-panel-editar" hidden>
+    <h2 class="content-section-title">Editar equipo</h2>
+    <div class="form-card">
+        <div class="field">
+            <label class="field-label" for="eq-edit-nombre">Nombre</label>
+            <input class="field-input" type="text" id="eq-edit-nombre" maxlength="100">
+        </div>
+        <div class="field-row cols-2">
+            <div class="field">
+                <label class="field-label" for="eq-edit-disciplina">Disciplina</label>
+                <input class="field-input" type="text" id="eq-edit-disciplina" maxlength="60">
+            </div>
+            <div class="field">
+                <label class="field-label" for="eq-edit-logo">Nuevo logo (opcional)</label>
+                <input class="field-input" type="file" id="eq-edit-logo" accept="image/png,image/jpeg,image/webp">
+            </div>
+        </div>
+        <div class="field">
+            <label class="field-label" for="eq-edit-desc">Descripción</label>
+            <textarea class="field-textarea" id="eq-edit-desc" maxlength="500"></textarea>
+        </div>
+        <p id="eq-edit-msg" class="form-msg" role="status"></p>
+        <div class="form-actions">
+            <button type="button" class="btn-primary" id="eq-edit-btn">Guardar cambios</button>
+            <button type="button" class="btn-secondary" id="eq-delete-btn" style="margin-left:auto;color:#ff6b6b;">Disolver equipo</button>
+        </div>
+    </div>
+</section>
+
+<!-- ══ MIEMBROS ══ -->
+<section class="content-section">
+    <h2 class="content-section-title">Miembros</h2>
+    <div class="form-card" id="eq-miembros"></div>
+</section>
+
+<p class="form-note">
+    El historial de torneos del equipo se habilita en una próxima entrega,
+    cuando se pueda inscribir a un equipo entero a un torneo.
+</p>
+
+</div>
+</main>
+
+<!-- ══ FOOTER ══ -->
+<script src="../../assets/js/api.js"></script>
+<script src="equipo.js"></script>
+<script src="../../components/footer.js"></script>
+</body>
+</html>

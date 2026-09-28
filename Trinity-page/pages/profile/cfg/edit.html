@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar perfil — Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="edit.css">
+    <link rel="icon" type="image/png" href="../../../assets/favicon.ico">
+    <link rel="stylesheet" href="../../../components/nav.css">
+    <link rel="stylesheet" href="../../../components/footer.css">
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<script src="../../../components/nav.js"></script>
+
+<!-- ══ MAIN LAYOUT ══ -->
+<main class="edit-layout">
+
+    <!-- COLUMNA IZQUIERDA: CARD DE PERFIL (preview) -->
+    <aside class="profile-preview-card">
+      <div class="aside-content">
+        <form class="preview-form" id="preview-form">
+            <div class="preview-photo-wrap">
+                <div class="preview-photo" id="preview-photo">S</div>
+                <label class="btn-change-photo" for="input-photo">
+                    Cambiar foto
+                </label>
+                <input type="file" id="input-photo" accept="image/png,image/jpeg,image/webp" style="display:none;">
+            </div>
+
+            <div class="preview-info">
+                <label class="field-label" for="edit-nombre">Nombre</label>
+                <input type="text" id="edit-nombre" class="preview-input" value="Santiago R.">
+
+                <label class="field-label" for="edit-usuario">Nombre de usuario</label>
+                <input type="text" id="edit-usuario" class="preview-input" value="santiagor">
+
+                <label class="field-label" for="edit-pronombres">Pronombres</label>
+                <select id="edit-pronombres" class="preview-input preview-select">
+                    <option value="">— Sin especificar —</option>
+                    <option value="He/him" selected>He/him</option>
+                    <option value="She/her">She/her</option>
+                    <option value="He/they">He/they</option>
+                    <option value="She/they">She/they</option>
+                    <option value="They/them">They/them</option>
+                    <option value="Any">Any</option>
+                </select>
+
+                <label class="field-label" for="edit-descripcion">Descripción</label>
+                <textarea id="edit-descripcion" class="preview-input preview-textarea" placeholder="Contá algo sobre vos...">Organizador y jugador de Clash Royale. Capitán de Los Pibardos CR.</textarea>
+            </div>
+
+            <div class="preview-actions">
+                <button type="submit" class="btn-primary" id="btn-save-preview">
+                    &#x1F4BE;&nbsp; GUARDAR CAMBIOS
+                </button>
+            </div>
+            <p class="msg" id="preview-msg"></p>
+        </form>
+      </div>
+    </aside>
+
+    <!-- COLUMNA DERECHA: SECCIONES DE CONFIG -->
+    <div class="edit-sections">
+
+        <!-- ── PREFERENCIAS (deportes / videojuegos favoritos) ── -->
+        <section class="edit-card">
+            <h2 class="edit-card-title-sub">Preferencias</h2>
+            <p class="edit-card-desc">Elegí tus deportes y videojuegos favoritos — se muestran en tu perfil público.</p>
+
+            <div class="field">
+                <label class="field-label">Deportes</label>
+                <div class="pill-select" id="pills-deportes"></div>
+            </div>
+
+            <div class="field" style="margin-top:1rem;">
+                <label class="field-label">Videojuegos</label>
+                <div class="pill-select" id="pills-videojuegos"></div>
+            </div>
+
+            <div class="card-actions" style="justify-content:flex-end;">
+                <button type="button" class="btn-primary" id="btn-save-prefs">
+                    &#x1F4BE;&nbsp; GUARDAR PREFERENCIAS
+                </button>
+            </div>
+            <p class="msg" id="prefs-msg"></p>
+        </section>
+
+        <!-- ── CUENTAS DE VIDEOJUEGO ── -->
+        <section class="edit-card">
+            <h2 class="edit-card-title-sub">Cuentas de videojuego</h2>
+            <p class="edit-card-desc">Vinculá tus cuentas para mostrar estadísticas reales en tu perfil.</p>
+
+            <div class="gamelink-forms" id="gamelink-forms">
+
+                <div class="gamelink-form" data-game="brawlstars" data-path="BRAWLAPI" data-field="tag">
+                    <span class="gamelink-form-emoji">🎯</span>
+                    <div class="gamelink-form-body">
+                        <p class="gamelink-form-title">Brawl Stars</p>
+                        <p class="gamelink-form-current" data-role="current">No vinculada</p>
+                        <div class="gamelink-form-row">
+                            <input type="text" class="field-input" data-role="input" placeholder="#TAG (ej: #ABC123)">
+                            <button type="button" class="btn-secondary" data-role="btn">Vincular</button>
+                        </div>
+                        <p class="msg" data-role="msg"></p>
+                    </div>
+                </div>
+
+                <div class="gamelink-form" data-game="clashroyale" data-path="ClashRoyaleAPI" data-field="tag">
+                    <span class="gamelink-form-emoji">⚔️</span>
+                    <div class="gamelink-form-body">
+                        <p class="gamelink-form-title">Clash Royale</p>
+                        <p class="gamelink-form-current" data-role="current">No vinculada</p>
+                        <div class="gamelink-form-row">
+                            <input type="text" class="field-input" data-role="input" placeholder="#TAG (ej: #ABC123)">
+                            <button type="button" class="btn-secondary" data-role="btn">Vincular</button>
+                        </div>
+                        <p class="msg" data-role="msg"></p>
+                    </div>
+                </div>
+
+                <div class="gamelink-form" data-game="fortnite" data-path="FortniteAPI" data-field="username">
+                    <span class="gamelink-form-emoji">🏗️</span>
+                    <div class="gamelink-form-body">
+                        <p class="gamelink-form-title">Fortnite</p>
+                        <p class="gamelink-form-current" data-role="current">No vinculada</p>
+                        <div class="gamelink-form-row">
+                            <input type="text" class="field-input" data-role="input" placeholder="Nombre de usuario">
+                            <button type="button" class="btn-secondary" data-role="btn">Vincular</button>
+                        </div>
+                        <p class="msg" data-role="msg"></p>
+                    </div>
+                </div>
+
+                <div class="gamelink-form" data-game="minecraft" data-path="MinecraftAPI" data-field="username">
+                    <span class="gamelink-form-emoji">🧱</span>
+                    <div class="gamelink-form-body">
+                        <p class="gamelink-form-title">Minecraft</p>
+                        <p class="gamelink-form-current" data-role="current">No vinculada</p>
+                        <div class="gamelink-form-row">
+                            <input type="text" class="field-input" data-role="input" placeholder="Nombre de usuario Java">
+                            <button type="button" class="btn-secondary" data-role="btn">Vincular</button>
+                        </div>
+                        <p class="msg" data-role="msg"></p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ── CAMBIAR CONTRASEÑA ── -->
+        <section class="edit-card">
+            <h2 class="edit-card-title">Cambiar contraseña</h2>
+
+            <form id="pwd-paso1">
+                <p class="edit-card-desc">Te enviaremos un código de verificación para confirmar el cambio.</p>
+                <div class="field" id="pwd-destino-wrap">
+                    <label class="field-label" for="pwd-destino">Enviar código a</label>
+                    <select id="pwd-destino" class="preview-input preview-select">
+                        <option value="email">Email</option>
+                        <option value="telefono">WhatsApp</option>
+                    </select>
+                </div>
+                <div class="card-actions">
+                    <button type="submit" class="btn-primary" id="btn-pwd-send">
+                        &#x1F4E8;&nbsp; ENVIAR CÓDIGO DE VERIFICACIÓN
+                    </button>
+                </div>
+                <p class="msg" id="pwd-paso1-msg"></p>
+            </form>
+
+            <h3 class="pwd-paso2-divider"><span>Paso 2 — Confirmá el código y elegí tu nueva contraseña</span></h3>
+            <form id="pwd-paso2">
+                <p class="edit-card-desc">Ingresá el código que te enviamos y tu nueva contraseña.</p>
+                <label class="field-label" id="pwd-otp-label">Código de verificación</label>
+                <div class="otp-inputs" id="otp-pwd" aria-labelledby="pwd-otp-label">
+                    <input maxlength="1">
+                    <input maxlength="1">
+                    <input maxlength="1">
+                    <input maxlength="1">
+                    <input maxlength="1">
+                    <input maxlength="1">
+                </div>
+                <div class="two-fields">
+                    <div class="field">
+                        <label class="field-label" for="pwd-nueva">Nueva contraseña</label>
+                        <input type="password" id="pwd-nueva" class="field-input" placeholder="••••••••">
+                    </div>
+                    <div class="field">
+                        <label class="field-label" for="pwd-confirm">Confirmar contraseña</label>
+                        <input type="password" id="pwd-confirm" class="field-input" placeholder="••••••••">
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button type="submit" class="btn-primary" id="btn-pwd-confirm">&#x1F511;&nbsp; ACTUALIZAR</button>
+                    <button type="button" class="btn-secondary" id="btn-pwd-cancel">Cancelar</button>
+                </div>
+                <p class="msg" id="pwd-paso2-msg"></p>
+            </form>
+        </section>
+
+        <!-- ── CREDENCIALES ── -->
+        <section class="edit-card">
+            <h2 class="edit-card-title-sub">Credenciales</h2>
+            <p class="edit-card-desc">El email se guarda al instante. El teléfono requiere confirmar un código que te enviamos por WhatsApp.</p>
+
+            <form class="credentials-form" id="credentials-form">
+                <div class="credentials-grid">
+                    <!-- Email -->
+                    <div class="field">
+                        <label class="field-label" for="edit-email">Correo electrónico</label>
+                        <input type="email" id="edit-email" class="field-input">
+                    </div>
+
+                    <!-- Teléfono -->
+                    <div class="field">
+                        <label class="field-label" for="edit-telefono">Número de teléfono</label>
+                        <div class="phone-wrap">
+                            <select class="phone-prefix" aria-label="Prefijo telefónico" id="edit-telefono-prefijo">
+                                <option value="598" selected>🇺🇾 +598</option>
+                                <option value="54">🇦🇷 +54</option>
+                                <option value="55">🇧🇷 +55</option>
+                                <option value="56">🇨🇱 +56</option>
+                                <option value="57">🇨🇴 +57</option>
+                                <option value="51">🇵🇪 +51</option>
+                                <option value="52">🇲🇽 +52</option>
+                                <option value="34">🇪🇸 +34</option>
+                                <option value="1">🇺🇸 +1</option>
+                            </select>
+                            <input type="tel" id="edit-telefono" class="field-input phone-input" placeholder="99 123 456">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-actions" style="justify-content:flex-end;">
+                    <button type="submit" class="btn-primary" id="btn-save-credentials">
+                        &#x1F4BE;&nbsp; GUARDAR CAMBIOS
+                    </button>
+                </div>
+                <p class="msg" id="credentials-msg"></p>
+            </form>
+
+            <!-- Paso 2: solo aparece si se pidió cambiar/agregar el teléfono -->
+            <div class="two-fields" id="telefono-otp-block" hidden style="margin-top:1rem;">
+                <div class="field" style="grid-column:1 / -1;">
+                    <label class="field-label" id="tel-otp-label">Ingresá el código que te enviamos por WhatsApp</label>
+                    <div class="otp-inputs" id="otp-telefono-cred" aria-labelledby="tel-otp-label">
+                        <input maxlength="1">
+                        <input maxlength="1">
+                        <input maxlength="1">
+                        <input maxlength="1">
+                        <input maxlength="1">
+                        <input maxlength="1">
+                    </div>
+                </div>
+                <div class="card-actions" style="grid-column:1 / -1;justify-content:flex-end;">
+                    <button type="button" class="btn-secondary" id="btn-cancel-telefono">Cancelar</button>
+                    <button type="button" class="btn-primary" id="btn-confirm-telefono">Confirmar número</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── NOTIFICACIONES ── -->
+        <section class="edit-card">
+            <h2 class="edit-card-title-sub">Notificaciones</h2>
+            <p class="edit-card-desc">Elegí cómo querés recibir las notificaciones de Trinity.</p>
+
+            <div class="notif-row">
+                <div class="notif-row-info">
+                    <span class="notif-row-label">📧 Email</span>
+                    <span class="notif-row-sub">Siempre activado — te llegan a tu correo registrado.</span>
+                </div>
+                <div class="notif-toggle-wrap">
+                    <label class="toggle-switch toggle-disabled" title="El email siempre está activado">
+                        <input type="checkbox" checked disabled>
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="notif-row" id="notif-wa-row">
+                <div class="notif-row-info">
+                    <span class="notif-row-label">💬 WhatsApp</span>
+                    <span class="notif-row-sub" id="notif-wa-sub">Activá para recibir notificaciones en tu número.</span>
+                </div>
+                <div class="notif-toggle-wrap">
+                    <label class="toggle-switch" id="notif-wa-label">
+                        <input type="checkbox" id="toggle-notif-wa">
+                        <span class="toggle-track"></span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── ZONA DE PELIGRO ── -->
+        <section class="edit-card danger-card">
+            <h2 class="edit-card-title danger-title">Zona de peligro</h2>
+            <p class="edit-card-desc">Al eliminar tu cuenta se borrarán permanentemente todos tus datos, torneos e historial. Esta acción no se puede deshacer.</p>
+            <div class="card-actions">
+                <button type="button" class="btn-danger">
+                    &#x1F5D1;&nbsp; Eliminar cuenta
+                </button>
+            </div>
+        </section>
+
+    </div>
+</main>
+
+<!-- ══ MODAL: RECORTAR FOTO DE PERFIL ══ -->
+<div class="modal-overlay" id="cropper-modal">
+    <div class="modal-box cropper-box">
+        <button type="button" class="modal-close" id="cropper-close">&times;</button>
+        <h3 class="modal-title">Ajustá tu foto</h3>
+        <p class="modal-desc">Arrastrá para mover y usá el control para acercar.</p>
+        <div class="cropper-stage">
+            <canvas id="cropper-canvas" width="320" height="320"></canvas>
+        </div>
+        <input type="range" id="cropper-zoom" class="cropper-zoom-slider" min="1" max="3" step="0.01" value="1">
+        <div class="card-actions" style="justify-content:flex-end;margin-top:1rem;">
+            <button type="button" class="btn-secondary" id="cropper-cancel">Cancelar</button>
+            <button type="button" class="btn-primary" id="cropper-confirm">Usar esta foto</button>
+        </div>
+    </div>
+</div>
+
+<script src="../../../assets/js/api.js"></script>
+<script src="edit.js"></script>
+<script src="../../../components/footer.js"></script>
+</body>
+</html>

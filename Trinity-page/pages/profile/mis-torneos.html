@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis torneos — Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../components/nav.css">
+    <link rel="stylesheet" href="../../components/footer.css">
+    <link rel="stylesheet" href="../../components/ui.css">
+    <link rel="stylesheet" href="mis-torneos.css">
+    <link rel="icon" type="image/png" href="../../assets/favicon.ico">
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<script src="../../components/nav.js"></script>
+
+<main>
+<section class="page-hero">
+    <p class="page-eyebrow">Trinity · Perfil</p>
+    <h1 class="page-title">Mis torneos</h1>
+    <p class="page-subtitle">Torneos en los que estás inscripto, organizados por estado.</p>
+</section>
+
+<section class="content-section">
+    <div class="mis-torneos-tabs">
+        <span class="round-tab active" data-tab="activos">Activos</span>
+        <span class="round-tab" data-tab="finalizados">Finalizados</span>
+        <span class="round-tab" data-tab="invitaciones">Invitaciones</span>
+    </div>
+
+    <div class="grid-cards" id="mt-grid">
+        <p class="no-tournaments">Cargando tus torneos...</p>
+    </div>
+</section>
+
+</main>
+
+<script src="../../assets/js/api.js"></script>
+<script src="mis-torneos.js"></script>
+<script src="../../components/footer.js"></script>
+</body>
+</html>

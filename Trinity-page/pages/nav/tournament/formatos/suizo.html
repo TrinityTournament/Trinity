@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema suizo — Trinity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../../../components/nav.css">
+    <link rel="stylesheet" href="../../../../components/footer.css">
+    <link rel="stylesheet" href="../../../../components/ui.css">
+    <link rel="stylesheet" href="formatos.css">
+    <link rel="icon" type="image/png" href="../../../../assets/favicon.ico">
+</head>
+<body>
+
+<!-- ══ NAV ══ -->
+<script src="../../../../components/nav.js"></script>
+
+<main>
+<section class="page-hero">
+    <p class="page-eyebrow" id="f-eyebrow">Trinity</p>
+    <h1 class="page-title">Sistema suizo</h1>
+    <p class="page-subtitle">Los participantes se emparejan según su rendimiento acumulado, evitando repetir rivales cuando es posible.</p>
+    <div class="page-hero-actions">
+        <a href="../detalle.html" id="f-volver" class="btn-secondary">← Volver al torneo</a>
+    </div>
+</section>
+
+<section class="content-section" id="f-body" hidden>
+    <div class="results-head">
+        <h2 class="content-section-title" id="f-ronda-titulo">Emparejamientos</h2>
+        <div class="round-tabs" id="f-round-tabs"></div>
+    </div>
+
+    <div class="data-table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>Mesa</th><th>Participante A (pts.)</th><th></th><th>Participante B (pts.)</th><th>Resultado</th></tr>
+            </thead>
+            <tbody id="f-mesas-body"></tbody>
+        </table>
+    </div>
+
+    <h2 class="content-section-title" style="margin-top:2.5rem;">Puntajes acumulados</h2>
+    <div class="data-table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr><th>#</th><th>Participante</th><th>Rondas jugadas</th><th>Puntos</th></tr>
+            </thead>
+            <tbody id="f-puntajes-body"></tbody>
+        </table>
+    </div>
+</section>
+
+<section class="content-section" id="f-error" hidden>
+    <p class="no-tournaments" id="f-error-msg"></p>
+</section>
+
+</main>
+
+<script src="../../../../assets/js/api.js"></script>
+<script src="suizo.js"></script>
+<script src="../../../../components/footer.js"></script>
+</body>
+</html>
