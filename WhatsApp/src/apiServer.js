@@ -11,6 +11,7 @@
 import express from 'express';
 import { getClient, isReady } from './lib/botState.js';
 import { guardarFoto, leerFoto, borrarFoto } from './lib/photoStorage.js';
+import { readAsset } from './lib/assetStorage.js'
 
 const app = express();
 // Límite default de express.json() es 100kb — las fotos de perfil
@@ -154,6 +155,26 @@ app.delete('/api/storage/photo/:id', async (req, res) => {
     } catch (err) {
         console.error('[storage] Error al borrar foto:', err.message);
         res.status(500).json({ error: 'No se pudo borrar la imagen.' });
+    }
+});
+
+app.get('/api/assets', async (req, res) => {
+    const { path: relPath } = req.query;
+    if (!relPath) {
+        return res.status(400).json({ error: 'No se está solicitando una imagen.'})
+    }
+
+    try {
+        const asset = await readAsset(relPath);
+        if (!asset) {
+            return res.status(404).json({ error: 'Imagen no existente.'});
+        }
+        res.setHeader('Content-Type', asset.mime);
+        res.setHeader('Cache-Control', 'public, max-age=604800') // 7 Dias - Estaticos
+        res.send(asset.buffer);
+    } catch(err) {
+        console.error('[ASSETS] Error al leer el asset: ', err.message);
+        res.status(500).json({ error: 'No se pudo leer la imagen'});
     }
 });
 
