@@ -32,7 +32,7 @@ const API_BASE_URL = (() => {
     const script = document.currentScript
         || document.querySelector('script[src*="assets/js/api.js"]');
     if (!script) return '';
-    return script.src.replace(/\/assets\/js\/api\.js.*$/, '');
+    return script.src.replace(/\/components\/api\.js.*$/, '')
 })();
 
 // ── CSRF TOKEN ────────────────────────────────────────────

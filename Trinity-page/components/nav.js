@@ -290,7 +290,7 @@ function setNavLoggedIn(u) {
 async function logout() {
     try {
         // Necesitamos el csrf_token vigente: se pide justo antes de
-        // cerrar sesión para no depender de que assets/js/api.js esté
+        // cerrar sesión para no depender de que components/api.js esté
         // cargado en esta página.
         const tokenRes = await fetch(`${navBaseURI}/../app/auth/csrf-token.php`, { credentials: 'include' });
         const { csrf_token } = await tokenRes.json();

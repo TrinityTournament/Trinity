@@ -1,6 +1,6 @@
 const $ = (sel) => document.querySelector(sel);
 
-const BANNER_PATH = '../../../assets/cards/tournament-banner/';
+const BANNER_PATH = `${API_BASE_URL}/../app/assets/get.php?path=cards/tournament-banner/`;
 const BANNER_POR_DEPORTE = {
     'fútbol':       BANNER_PATH + 'FutbolBG.jpg',
     'futbol':       BANNER_PATH + 'FutbolBG.jpg',

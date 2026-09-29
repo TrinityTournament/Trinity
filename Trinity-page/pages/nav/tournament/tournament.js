@@ -9,10 +9,10 @@ const state = {
 };
 
 const ACC_GAMES = {
-    brawlstars:  { path: 'BRAWLAPI',       idField: 'tag',      label: 'Brawl Stars',  icon: '../../../assets/logosGames/brawl.png' },
-    clashroyale: { path: 'ClashRoyaleAPI', idField: 'tag',      label: 'Clash Royale', icon: '../../../assets/logosGames/clash.png' },
-    fortnite:    { path: 'FortniteAPI',    idField: 'username', label: 'Fortnite',     icon: '../../../assets/logosGames/fortnite.png' },
-    minecraft:   { path: 'MinecraftAPI',   idField: 'username', label: 'Minecraft',    icon: '../../../assets/logosGames/minecraft.png' },
+    brawlstars:  { path: 'BRAWLAPI',       idField: 'tag',      label: 'Brawl Stars',  icon: `${API_BASE_URL}/../app/assets/get.php?path=logosGames/brawl.png` },
+    clashroyale: { path: 'ClashRoyaleAPI', idField: 'tag',      label: 'Clash Royale', icon: `${API_BASE_URL}/../app/assets/get.php?path=logosGames/clash.png` },
+    fortnite:    { path: 'FortniteAPI',    idField: 'username', label: 'Fortnite',     icon: `${API_BASE_URL}/../app/assets/get.php?path=logosGames/fortnite.png` },
+    minecraft:   { path: 'MinecraftAPI',   idField: 'username', label: 'Minecraft',    icon: `${API_BASE_URL}/../app/assets/get.php?path=logosGames/minecraft.png` },
 };
 
 document.addEventListener('DOMContentLoaded', init);

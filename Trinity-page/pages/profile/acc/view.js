@@ -1,5 +1,5 @@
 const $ = (sel) => document.querySelector(sel);
-const BANNER_PATH = '../../../assets/cards/tournament-banner/';
+const BANNER_PATH = `${API_BASE_URL}/../app/assets/get.php?path=cards/tournament-banner/`;
 const FAVORITOS_META = {
     'Fútbol':       { img: BANNER_PATH + 'FutbolBG.jpg', emoji: '⚽' },
     'Brawl Stars':  { img: BANNER_PATH + 'BSBG.png',    emoji: '🎯' },

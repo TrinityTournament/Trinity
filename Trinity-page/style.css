@@ -232,7 +232,7 @@ nav {
     align-items: center;
     padding: 64px 3rem 0;
     overflow: hidden;
-    background-image: url('assets/HeroMain.png');
+    background-image: url('app/assets/get.php?path=HeroMain.png');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -317,7 +317,7 @@ nav {
    (mismo breakpoint que usa nav.css para pasar a layout de escritorio)
    se reemplaza por HeroMainPC.png */
 @media (min-width: 900px) {
-    .hero { background-image: url('assets/HeroMainPC.png'); }
+    .hero { background-image: url('app/assets/get.php?path=HeroMainPC.png'); }
 }
 
 /* Pantallas de poca altura (celulares/tablets en horizontal): el hero mide
