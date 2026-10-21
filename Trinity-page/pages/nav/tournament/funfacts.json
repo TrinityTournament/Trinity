@@ -1,16 +1,16 @@
 {
     "brawl stars": [
         {
-            "titulo": "¿Sabías que?",
-            "texto": "Dato curioso número 1."
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Si el rival juega una carta cara detrás de su torre, atacá la linea contraria. Vas a lograr mucho daño."
         },
         {
-            "titulo": "¿Sabías que...?",
-            "texto": "Dato curioso número 2."
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Contá el elixir de tu rival. En x1, cada 3 segundos se obtiene una gota de elixir, en x2 cada 1.5 segundos y en x3, cada un segundo."
         },
         {
-            "titulo": "¿Sabías que...?",
-            "texto": "Dato curioso número"
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": ""
         }
     ],
     "fortnite": [
