@@ -9,6 +9,13 @@ const navBaseURI = (() => {
     return script.src.replace(/\/components\/nav\.js.*$/, '');
 })();
 
+// ── ESTADO DE NOTIFICACIONES ──────────────
+// Va arriba de todo a propósito: injectNav() corre al cargar el script y puede
+// llamar a setNavLoggedIn() (sesión en caché) antes de que se evalúe el resto.
+const NOTIF_POLL_MS = 60000;
+const NOTIF_ICONOS  = { torneo: '🏆', equipo: '👥', seguidor: '👤' };
+const notifState    = { activa: false, timer: null, items: [], noLeidas: 0 };
+
 // ── INYECTAR NAV ──────────────────────────
 
 (function injectNav() {
@@ -52,6 +59,26 @@ const navBaseURI = (() => {
             <div id="nav-guest">
                 <a href="${navBaseURI}/pages/login/login.html" class="btn-login">Iniciar sesión</a>
                 <a href="${navBaseURI}/pages/login/login.html?m=register" class="btn-register">Registrarse</a>
+            </div>
+
+            <!-- CAMPANA DE NOTIFICACIONES (visible solo con sesión) -->
+            <div class="notif-menu" id="nav-notif">
+                <button type="button" class="notif-trigger" id="notif-trigger"
+                        aria-label="Notificaciones" aria-haspopup="true" aria-expanded="false">
+                    <svg class="notif-bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                         stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.7 21a2 2 0 0 1-3.4 0"/>
+                    </svg>
+                    <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+                </button>
+                <div class="notif-dropdown" id="notif-dropdown">
+                    <div class="notif-dropdown-header">
+                        <span>Notificaciones</span>
+                        <button type="button" class="notif-mark-all" id="notif-mark-all">Marcar todas como leídas</button>
+                    </div>
+                    <div class="notif-list" id="notif-list"><p class="notif-empty">Cargando...</p></div>
+                </div>
             </div>
 
             <!-- USER LOGUEADO -->
@@ -116,6 +143,7 @@ const navBaseURI = (() => {
     document.getElementById('hamburger').addEventListener('click', toggleHamburger); // 🍔 can i have
     document.getElementById('user-trigger').addEventListener('click', toggleDropdown); // a cheeseburger plz
     document.getElementById('nav-logout-btn').addEventListener('click', logout);
+    wireNotifications();
 
     // Cerrar dropdown al clickear fuera
     document.addEventListener('click', e => {
@@ -181,6 +209,7 @@ function setNavLoggedOut() {
     if (guestEl)    guestEl.style.display  = '';
     if (userEl)     userEl.classList.remove('active');
     if (mobileAuth) mobileAuth.style.display = '';
+    notifSetActive(false);
 }
 
 // ── BUSCADOR DE USUARIOS ───────────────────
@@ -256,6 +285,179 @@ function fotoUrlSrc(fotoId) {
     return fotoId ? `${navBaseURI}/../app/users/photo.php?id=${encodeURIComponent(fotoId)}` : null;
 }
 
+// ── NOTIFICACIONES ─────────────────────────
+// Backend: app/notifications/get-notifications.php y mark-notifications-read.php.
+// La campana se muestra solo con sesión iniciada y consulta cada 60 s mientras la
+// pestaña esté visible. Se usa fetch directo (como el resto de nav.js) para no
+// depender de que components/api.js esté cargado en cada página.
+
+function wireNotifications() {
+    const trigger = document.getElementById('notif-trigger');
+    if (!trigger) return;
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        notifToggle();
+    });
+    document.getElementById('notif-mark-all').addEventListener('click', notifMarkAll);
+    document.getElementById('notif-list').addEventListener('click', notifOnItemClick);
+
+    // Cerrar al clickear fuera o con Escape
+    document.addEventListener('click', (e) => {
+        const menu = document.getElementById('nav-notif');
+        if (menu && !menu.contains(e.target)) notifClose();
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') notifClose(); });
+
+    // Al volver a la pestaña se refresca enseguida
+    document.addEventListener('visibilitychange', () => {
+        if (notifState.activa && document.visibilityState === 'visible') notifLoad();
+    });
+}
+
+function notifSetActive(on) {
+    const menu = document.getElementById('nav-notif');
+    if (!menu) return;
+    menu.classList.toggle('active', on);
+
+    if (on && !notifState.activa) {
+        notifState.activa = true;
+        notifLoad();
+        notifState.timer = setInterval(() => {
+            if (document.visibilityState === 'visible') notifLoad();
+        }, NOTIF_POLL_MS);
+    } else if (!on && notifState.activa) {
+        notifState.activa = false;
+        clearInterval(notifState.timer);
+        notifState.timer = null;
+        notifClose();
+    }
+}
+
+function notifToggle() {
+    const dd = document.getElementById('notif-dropdown');
+    const abrir = !dd.classList.contains('open');
+    dd.classList.toggle('open', abrir);
+    document.getElementById('notif-trigger').classList.toggle('open', abrir);
+    document.getElementById('notif-trigger').setAttribute('aria-expanded', String(abrir));
+    if (abrir) notifLoad();
+}
+
+function notifClose() {
+    document.getElementById('notif-dropdown')?.classList.remove('open');
+    const t = document.getElementById('notif-trigger');
+    if (t) { t.classList.remove('open'); t.setAttribute('aria-expanded', 'false'); }
+}
+
+async function notifLoad() {
+    try {
+        const res = await fetch(`${navBaseURI}/../app/notifications/get-notifications.php?limit=15`, {
+            credentials: 'include',
+        });
+        if (res.status === 401) { notifSetActive(false); return; }
+        if (!res.ok) return;
+
+        const data = await res.json();
+        notifState.items    = data.notificaciones || [];
+        notifState.noLeidas = data.no_leidas || 0;
+        notifRender();
+    } catch {
+        // Sin conexión: se deja lo que ya estaba dibujado.
+    }
+}
+
+function notifRender() {
+    const badge = document.getElementById('notif-badge');
+    const list  = document.getElementById('notif-list');
+    if (!badge || !list) return;
+
+    const n = notifState.noLeidas;
+    badge.textContent   = n > 99 ? '99+' : String(n);
+    badge.style.display = n > 0 ? '' : 'none';
+    document.getElementById('notif-trigger')
+        .setAttribute('aria-label', n > 0 ? `Notificaciones (${n} sin leer)` : 'Notificaciones');
+    document.getElementById('notif-mark-all').style.display = n > 0 ? '' : 'none';
+
+    if (!notifState.items.length) {
+        list.innerHTML = '<p class="notif-empty">No tenés notificaciones.</p>';
+        return;
+    }
+
+    list.innerHTML = notifState.items.map((it) => {
+        const icono  = NOTIF_ICONOS[String(it.tipo || '').split('_')[0]] || '🔔';
+        const link   = notifLinkSeguro(it.link);
+        const tag    = link ? 'a' : 'div';
+        const href   = link ? ` href="${escapeHtml(navBaseURI + link)}"` : '';
+        const clases = 'notif-item' + (it.leido ? '' : ' notif-item--unread');
+        return `
+            <${tag} class="${clases}"${href} data-id="${it.id}" data-leido="${it.leido ? 1 : 0}">
+                <span class="notif-icon">${icono}</span>
+                <span class="notif-info">
+                    <div class="notif-title">${escapeHtml(it.titulo)}</div>
+                    <div class="notif-msg">${escapeHtml(it.mensaje)}</div>
+                    <div class="notif-time">${notifTiempo(it.creado_en)}</div>
+                </span>
+                ${it.leido ? '' : '<span class="notif-dot"></span>'}
+            </${tag}>`;
+    }).join('');
+}
+
+// Solo se aceptan links internos del sitio ("/pages/..."): nada de http(s):// ni "//".
+function notifLinkSeguro(link) {
+    return typeof link === 'string' && link.startsWith('/') && !link.startsWith('//') ? link : null;
+}
+
+function notifTiempo(iso) {
+    const t = new Date(iso).getTime();
+    if (Number.isNaN(t)) return '';
+    const min = Math.max(0, Math.round((Date.now() - t) / 60000));
+    if (min < 1)  return 'ahora';
+    if (min < 60) return `hace ${min} min`;
+    const h = Math.round(min / 60);
+    if (h < 24)   return `hace ${h} h`;
+    const d = Math.round(h / 24);
+    if (d < 7)    return `hace ${d} ${d === 1 ? 'día' : 'días'}`;
+    return new Date(t).toLocaleDateString('es-UY', { day: 'numeric', month: 'short' });
+}
+
+async function notifOnItemClick(e) {
+    const item = e.target.closest('.notif-item');
+    if (!item) return;
+
+    const link = item.tagName === 'A' ? item.getAttribute('href') : null;
+    if (link) e.preventDefault();   // se navega recién después de marcarla como leída
+
+    if (item.dataset.leido === '0') {
+        await notifPost({ id: Number(item.dataset.id) });
+    }
+    if (link) {
+        window.location.href = link;
+    } else {
+        notifLoad();
+    }
+}
+
+async function notifMarkAll() {
+    await notifPost({ all: true });
+    notifLoad();
+}
+
+// El CSRF se pide justo antes de escribir (igual que logout()).
+async function notifPost(body) {
+    try {
+        const tokenRes = await fetch(`${navBaseURI}/../app/auth/csrf-token.php`, { credentials: 'include' });
+        const { csrf_token } = await tokenRes.json();
+        await fetch(`${navBaseURI}/../app/notifications/mark-notifications-read.php`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf_token },
+            body: JSON.stringify(body),
+        });
+    } catch {
+        // Si falla, la notificación sigue "sin leer" y se reintenta al próximo click.
+    }
+}
+
 // ── AUTH ─────────────
 
 function setNavLoggedIn(u) {
@@ -265,6 +467,7 @@ function setNavLoggedIn(u) {
     if (guestEl)    guestEl.style.display  = 'none';
     if (userEl)     userEl.classList.add('active');
     if (mobileAuth) mobileAuth.style.display = 'none';
+    notifSetActive(true);
 
     const letra = (u.usuario?.[0] || u.nombre?.[0] || '?').toUpperCase();
 

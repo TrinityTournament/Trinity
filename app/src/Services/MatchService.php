@@ -101,15 +101,29 @@ class MatchService
         }
         $numRondas = (int) log($bracketSize, 2);
 
-        $slots = $ids;
-        while (count($slots) < $bracketSize) {
-            $slots[] = null; // byes al final — el orden ya viene mezclado al azar
+        $numPartidosR1 = intdiv($bracketSize, 2);
+
+        // Los byes se REPARTEN por el cuadro (un bye por cruce, en posiciones
+        // alejadas entre sí) en vez de amontonarse al final del arreglo.
+        // Antes se hacía `$slots[] = null` hasta completar el cuadro: con 2
+        // o más byes quedaba algún cruce (null, null) que se salteaba, y el
+        // partido de la ronda siguiente que dependía de él se quedaba para
+        // siempre sin rival → el torneo nunca llegaba a 'finalizado'
+        // (pasaba con 5, 6, 9..13, 17... inscriptos).
+        // Como n > bracketSize/2, los byes son siempre menos que los cruces
+        // de la ronda 1, así que cada cruce tiene al menos un jugador real.
+        $byes    = $bracketSize - $n;
+        $conBye  = array_flip(array_slice($this->ordenBitReverso($numPartidosR1), 0, $byes));
+        $slots   = [];
+        $k       = 0;
+        for ($i = 0; $i < $numPartidosR1; $i++) {
+            $slots[] = $ids[$k++];
+            $slots[] = isset($conBye[$i]) ? null : $ids[$k++];
         }
 
         $filas = [];
         $byeWinners = []; // orden (ronda 1) => id del que avanza sin jugar
 
-        $numPartidosR1 = intdiv($bracketSize, 2);
         for ($i = 0; $i < $numPartidosR1; $i++) {
             $p1 = $slots[$i * 2];
             $p2 = $slots[$i * 2 + 1];
@@ -151,6 +165,32 @@ class MatchService
         foreach ($byeWinners as $orden => $ganadorId) {
             $this->avanzarGanador($torneoId, 1, $orden, $ganadorId, $numRondas);
         }
+    }
+
+    /** Posiciones 0..$m-1 ($m potencia de 2) en orden "bit-reverso":
+      * m=4 → [0,2,1,3], m=8 → [0,4,2,6,1,5,3,7]. Sirve para repartir los
+      * byes lo más lejos posible entre sí (primero uno por mitad del
+      * cuadro, después uno por cuarto, etc.).
+      *
+      * @return int[] */
+    private function ordenBitReverso(int $m): array
+    {
+        $bits = 0;
+        while ((1 << $bits) < $m) {
+            $bits++;
+        }
+
+        $orden = [];
+        for ($i = 0; $i < $m; $i++) {
+            $r = 0;
+            for ($b = 0; $b < $bits; $b++) {
+                if ($i & (1 << $b)) {
+                    $r |= 1 << ($bits - 1 - $b);
+                }
+            }
+            $orden[] = $r;
+        }
+        return $orden;
     }
 
     private function etiquetaRonda(int $ronda, int $totalRondas): string

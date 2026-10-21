@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Copa Trinity — Clash Royale — Trinity</title>
+    <title>Trinity</title>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../../components/nav.css">
     <link rel="stylesheet" href="../../../components/footer.css">
@@ -14,11 +14,9 @@
 </head>
 <body>
 
-<!-- ══ NAV ══ -->
 <script src="../../../components/nav.js"></script>
 
 <main>
-<!-- ══ BANNER DEL TORNEO ══ -->
 <header class="tournament-banner" id="tournament-banner" style="background-image:linear-gradient(180deg, rgba(10,0,0,.55), rgba(10,0,0,.95)), url('../../../app/assets/get.php?path=cards/tournament-banner/ClashBG.jpeg');">
     <div class="tournament-banner-content">
         <span class="badge" id="t-badge-estado">…</span>
@@ -26,6 +24,11 @@
         <div class="tournament-meta" id="t-meta"></div>
         <div class="page-hero-actions" id="t-actions"></div>
     </div>
+
+     <aside class="fun-facts-card" id="fun-facts" hidden>
+       <h2 class="fun-facts-title" id="fun-facts-title"></h2>
+       <p class="fun-facts-text" id="fun-facts-text"></p>
+   </aside>
 </header>
 
 <div id="t-error" class="content-section" hidden>
@@ -34,7 +37,6 @@
 
 <div id="t-body" hidden>
 
-<!-- ══ SUBNAV DE ANCLAS ══ -->
 <nav class="subnav">
     <a href="#info">Información</a>
     <a href="#participantes">Participantes</a>
@@ -44,7 +46,6 @@
     <a href="#llaves" id="nav-llaves" hidden>Llaves</a>
 </nav>
 
-<!-- ══ INFORMACIÓN ══ -->
 <section id="info" class="content-section">
     <h2 class="content-section-title">Información del torneo</h2>
     <div class="info-grid">
@@ -65,7 +66,6 @@
     <div class="page-hero-actions" id="t-org-actions" style="margin-top:1.25rem;"></div>
 </section>
 
-<!-- ══ PARTICIPANTES ══ -->
 <section id="participantes" class="content-section">
     <h2 class="content-section-title">Participantes</h2>
     <div class="data-table-wrap">
@@ -80,7 +80,6 @@
     </div>
 </section>
 
-<!-- ══ CALENDARIO ══ -->
 <section id="calendario" class="content-section" hidden>
     <h2 class="content-section-title">Próximos enfrentamientos</h2>
     <div class="data-table-wrap">
@@ -91,7 +90,6 @@
     </div>
 </section>
 
-<!-- ══ RESULTADOS ══ -->
 <section id="resultados" class="content-section" hidden>
     <h2 class="content-section-title">Resultados</h2>
     <div class="data-table-wrap">
@@ -102,7 +100,6 @@
     </div>
 </section>
 
-<!-- ══ POSICIONES ══ -->
 <section id="posiciones" class="content-section" hidden>
     <header class="results-head">
         <h2 class="content-section-title">Posiciones</h2>
@@ -116,7 +113,6 @@
     </div>
 </section>
 
-<!-- ══ LLAVES ══ -->
 <section id="llaves" class="content-section" hidden>
     <header class="results-head">
         <h2 class="content-section-title">Llaves</h2>
@@ -127,8 +123,6 @@
 
 </div>
 </main>
-
-<!-- ══ FOOTER ══ -->
 
 <script src="../../../components/api.js"></script>
 <script src="detalle.js"></script>

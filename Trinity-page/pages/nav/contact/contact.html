@@ -13,121 +13,128 @@
 </head>
 <body>
 
-<!-- ══ NAV ══ -->
-<script src="../../../components/nav.js"></script>
+<header class="site-header">
+    <script src="../../../components/nav.js"></script>
+</header>
 
 <main>
-<!-- ══ HERO ══ -->
-<section class="page-hero">
-    <p class="page-eyebrow">Trinity · Contacto</p>
-    <h1 class="page-title">¿Necesitás ayuda?</h1>
-    <p class="page-subtitle">
-        ¿Tenés dudas, problemas con un torneo o querés ponerte en contacto con el
-        equipo de Trinity? Escribinos.
-    </p>
-</section>
+    <section class="page-hero" aria-labelledby="contact-title">
+        <p class="page-eyebrow">Trinity · Contacto</p>
+        <h1 class="page-title" id="contact-title">¿Necesitás ayuda?</h1>
+        <p class="page-subtitle">
+            ¿Tenés dudas, problemas con un torneo o querés ponerte en contacto con el
+            equipo de Trinity? Escribinos.
+        </p>
+    </section>
 
-<!-- ══ FORMULARIO ══ -->
-<section class="content-section">
-    <form class="form-card contact-form" onsubmit="return false;">
-        <h2 class="content-section-title contact-form-title">Envianos un mensaje</h2>
+    <section class="content-section" aria-labelledby="contact-form-title">
+        <form class="form-card contact-form" aria-labelledby="contact-form-title" onsubmit="return false;">
+            <h2 class="content-section-title contact-form-title" id="contact-form-title">Envianos un mensaje</h2>
 
-        <div class="field-row cols-2">
+            <div class="field-row cols-2">
+                <div class="field">
+                    <label class="field-label" for="ct-nombre">Nombre completo</label>
+                    <input class="field-input" type="text" id="ct-nombre" placeholder="Tu nombre">
+                </div>
+                <div class="field">
+                    <label class="field-label" for="ct-contacto">Correo electrónico o número de teléfono</label>
+                    <input class="field-input" type="text" id="ct-contacto" placeholder="tu@gmail.com o número telefónico">
+                </div>
+            </div>
+
             <div class="field">
-                <label class="field-label" for="ct-nombre">Nombre completo</label>
-                <input class="field-input" type="text" id="ct-nombre" placeholder="Tu nombre">
+                <label class="field-label" for="ct-asunto">Asunto</label>
+                <input class="field-input" type="text" id="ct-asunto" placeholder="¿Sobre qué es tu consulta?">
             </div>
+
             <div class="field">
-                <label class="field-label" for="ct-contacto">Correo electrónico o número de teléfono</label>
-                <input class="field-input" type="text" id="ct-contacto" placeholder="tu@gmail.com o número telefónico">
+                <label class="field-label" for="ct-mensaje">Mensaje</label>
+                <textarea class="field-textarea" id="ct-mensaje" placeholder="Escribí tu mensaje acá..."></textarea>
             </div>
-        </div>
 
-        <div class="field">
-            <label class="field-label" for="ct-asunto">Asunto</label>
-            <input class="field-input" type="text" id="ct-asunto" placeholder="¿Sobre qué es tu consulta?">
-        </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary" id="ct-btn">Enviar mensaje</button>
+            </div>
+            <p id="ct-msg" class="form-msg" role="status"></p>
+        </form>
 
-        <div class="field">
-            <label class="field-label" for="ct-mensaje">Mensaje</label>
-            <textarea class="field-textarea" id="ct-mensaje" placeholder="Escribí tu mensaje acá..."></textarea>
-        </div>
-
-        <div class="form-actions">
-            <button type="submit" class="btn-primary" id="ct-btn">Enviar mensaje</button>
-        </div>
-        <p id="ct-msg" class="form-msg" role="status"></p>
-    </form>
-
-    <!-- ══ VÍAS ALTERNATIVAS ══ -->
-    <div class="contact-alt-grid">
-        <div class="contact-alt-card">
-            <div class="contact-alt-icon">✉️</div>
-            <p class="contact-alt-title">Escribinos</p>
-            <p class="contact-alt-text">
-                <a href="mailto:trinitysupportteam@gmail.com">✉️ trinitysupportteam@gmail.com</a><br>
-                <a href="www.wa.me/59892928797">📞 +598 9292 8797</a><br>
-                Respondemos en menos de 24hs hábiles.
-            </p>
-    </div>
-        <div class="contact-alt-card">
-            <div class="contact-alt-icon">🎧</div>
-            <p class="contact-alt-title">Soporte en vivo</p>
-            <p class="contact-alt-text">Chat disponible de lunes a viernes, de 9 a 20hs.</p>
-        </div>
-    </div>
-</section>
-
-<!-- ══ PREGUNTAS FRECUENTES ══ -->
-<section class="content-section">
-    <h2 class="content-section-title">Preguntas frecuentes</h2>
-    <div class="faq-list">
-        <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-                ¿Cómo me inscribo a un torneo?
-                <span class="faq-icon">+</span>
-            </button>
-            <div class="faq-answer">
-                <p>
-                    Entrá a la sección Torneos, elegí el juego y el torneo que te interese, y
-                    tocá "Inscribirme". Vas a necesitar tener una cuenta creada y, según el
-                    torneo, puede que también tengas que formar parte de un equipo.
+        <aside class="contact-alt-grid" aria-label="Otras vías de contacto">
+            <article class="contact-alt-card">
+                <span class="contact-alt-icon" aria-hidden="true">✉️</span>
+                <h3 class="contact-alt-title">Escribinos</h3>
+                <p class="contact-alt-text">
+                    <a href="mailto:trinitysupportteam@gmail.com">✉️ trinitysupportteam@gmail.com</a><br>
+                    <a href="https://wa.me/59892928797" target="_blank" rel="noopener noreferrer">📞 +598 9292 8797</a><br>
+                    Respondemos en menos de 24hs hábiles.
                 </p>
-            </div>
+            </article>
+            <article class="contact-alt-card">
+                <span class="contact-alt-icon" aria-hidden="true">🎧</span>
+                <h3 class="contact-alt-title">Soporte en vivo</h3>
+                <p class="contact-alt-text">Chat disponible de lunes a viernes, de 9 a 20hs.</p>
+            </article>
+        </aside>
+    </section>
+
+    <section class="content-section" aria-labelledby="faq-title">
+        <h2 class="content-section-title" id="faq-title">Preguntas frecuentes</h2>
+        <div class="faq-list">
+            <article class="faq-item">
+                <h3 class="faq-heading">
+                    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
+                        ¿Cómo me inscribo a un torneo?
+                        <span class="faq-icon" aria-hidden="true">+</span>
+                    </button>
+                </h3>
+                <div class="faq-answer">
+                    <p>
+                        Entrá a la sección Torneos, elegí el juego y el torneo que te interese, y
+                        tocá "Inscribirme". Vas a necesitar tener una cuenta creada y, según el
+                        torneo, puede que también tengas que formar parte de un equipo.
+                    </p>
+                </div>
+            </article>
+            <article class="faq-item">
+                <h3 class="faq-heading">
+                    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
+                        ¿Cómo se actualiza mi ranking?
+                        <span class="faq-icon" aria-hidden="true">+</span>
+                    </button>
+                </h3>
+                <div class="faq-answer">
+                    <p>
+                        Tu posición se recalcula automáticamente al terminar cada torneo en el que
+                        participaste, según los resultados obtenidos. Podés ver tu ranking
+                        actualizado en la sección Rankings.
+                    </p>
+                </div>
+            </article>
+            <article class="faq-item">
+                <h3 class="faq-heading">
+                    <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
+                        ¿Qué hago si tengo un problema durante un torneo?
+                        <span class="faq-icon" aria-hidden="true">+</span>
+                    </button>
+                </h3>
+                <div class="faq-answer">
+                    <p>
+                        Contactá primero al organizador del torneo desde su página de detalle. Si
+                        no llegan a un acuerdo, escribinos por acá mismo contándonos qué pasó y el
+                        equipo de Trinity va a intervenir.
+                    </p>
+                </div>
+            </article>
         </div>
-        <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-                ¿Cómo se actualiza mi ranking?
-                <span class="faq-icon">+</span>
-            </button>
-            <div class="faq-answer">
-                <p>
-                    Tu posición se recalcula automáticamente al terminar cada torneo en el que
-                    participaste, según los resultados obtenidos. Podés ver tu ranking
-                    actualizado en la sección Rankings.
-                </p>
-            </div>
-        </div>
-        <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)" aria-expanded="false">
-                ¿Qué hago si tengo un problema durante un torneo?
-                <span class="faq-icon">+</span>
-            </button>
-            <div class="faq-answer">
-                <p>
-                    Contactá primero al organizador del torneo desde su página de detalle. Si
-                    no llegan a un acuerdo, escribinos por acá mismo contándonos qué pasó y el
-                    equipo de Trinity va a intervenir.
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
+    </section>
+
 </main>
+
+<footer class="site-footer">
+    <script src="../../../components/footer.js"></script>
+</footer>
 
 <script src="../../../components/api.js"></script>
 <script src="contact.js"></script>
-<script src="../../../components/footer.js"></script>
 
 </body>
 </html>

@@ -4,6 +4,43 @@
     padding: 7.5rem 5vw 2.5rem;
     background-size: cover;
     background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+.tournament-banner-content { flex: 1 1 320px; min-width: 0; }
+
+/* ── Carta "Datos curiosos" (se adapta sola al largo del texto) ── */
+.fun-facts-card {
+    flex: 0 1 520px;
+    max-width: 100%;
+    padding: 1.6rem 2.2rem;
+    border-radius: 28px;
+    text-align: center;
+    background: linear-gradient(90deg, #000 0%, #5a0508 55%, #8f1214 100%);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, .45);
+    overflow-wrap: anywhere;
+}
+.fun-facts-card[hidden] { display: none; }
+.fun-facts-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(18px, 2.2vw, 24px);
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 0.9rem;
+}
+.fun-facts-text {
+    font-size: clamp(13px, 1.4vw, 15px);
+    font-weight: 700;
+    line-height: 1.45;
+    text-transform: uppercase;
+    white-space: pre-line;
+}
+@media (max-width: 800px) {
+    .fun-facts-card { flex-basis: 100%; padding: 1.2rem 1.4rem; }
 }
 .tournament-title {
     font-family: 'Barlow Condensed', sans-serif;

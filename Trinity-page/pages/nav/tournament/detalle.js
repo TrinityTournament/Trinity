@@ -15,6 +15,61 @@ let torneoActual = null;
 
 document.addEventListener('DOMContentLoaded', init);
 
+// El JSON usa como clave el nombre del juego en minúsculas y sin tildes
+// ("brawl stars", "clash royale", "futbol"...). Si el juego no tiene
+// entrada, se usa "default". Si tampoco hay "default", la carta se oculta.
+let funFactsPromise = null;
+
+function cargarFunFacts() {
+    if (!funFactsPromise) {
+        funFactsPromise = fetch('funfacts.json', { cache: 'no-store' })
+            .then((res) => {
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                return res.json();
+            })
+            .catch((err) => {
+                console.error('[detalle.js] datos curiosos', err);
+                funFactsPromise = null; // reintenta en el próximo render
+                return null;
+            });
+    }
+    return funFactsPromise;
+}
+
+async function mostrarFunFacts(deporte) {
+    const card = $('#fun-facts');
+    const data = await cargarFunFacts();
+
+    const entrada = data && (data[normalizar(deporte)] || data.default);
+    const lista = Array.isArray(entrada)
+        ? entrada
+        : entrada
+            ? [entrada]
+            : [];
+
+    const valido = lista.filter(f =>
+        f && typeof f.titulo === 'string' &&
+        typeof f.texto === 'string' &&
+        (f.titulo.trim() || f.texto.trim())
+    );
+
+    const elegido = valido.length
+        ? valido[Math.floor(Math.random() * valido.length)]
+        : null;
+
+    const titulo = (elegido?.titulo || '').trim();
+    const texto = (elegido?.texto || '').trim();
+
+    if (!titulo && !texto) {
+        card.hidden = true;
+        return;
+    }
+
+    $('#fun-facts-title').textContent = titulo;
+    $('#fun-facts-text').textContent  = texto;
+    card.hidden = false;
+}
+
 async function init() {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
@@ -43,6 +98,7 @@ function mostrarError(msg) {
     $('#t-error-msg').textContent = msg;
     $('#t-error').hidden = false;
     $('#t-body').hidden = true;
+    $('#fun-facts').hidden = true;
 }
 
 function render(t) {
@@ -54,6 +110,8 @@ function render(t) {
         $('#tournament-banner').style.backgroundImage =
             `linear-gradient(180deg, rgba(10,0,0,.55), rgba(10,0,0,.95)), url('${banner}')`;
     }
+
+    mostrarFunFacts(t.deporte);
 
     $('#t-badge-estado').textContent = t.estado_label;
     $('#t-badge-estado').className = `badge badge-${t.estado}`;

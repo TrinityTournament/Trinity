@@ -1,0 +1,34 @@
+{
+    "brawl stars": [
+        {
+            "titulo": "¿Sabías que?",
+            "texto": "Dato curioso número 1."
+        },
+        {
+            "titulo": "¿Sabías que...?",
+            "texto": "Dato curioso número 2."
+        },
+        {
+            "titulo": "¿Sabías que...?",
+            "texto": "Dato curioso número"
+        }
+    ],
+    "fortnite": [
+        {
+            "titulo": "¿Sabías que?",
+            "texto": "El jugador tarda 63 segundos en recorrer los 850 metros de altura hasta la isla sin desplegar el paracaídas."
+        },
+        {
+            "titulo": "¿Sabías que?",
+            "texto": "En picada, el descenso tarda apenas 19 segundos, frente a los 63 segundos de la caída normal."
+        },
+        {
+            "titulo": "¿Sabías que?",
+            "texto": "El paracaidas puede cambiar lo que demoras en aterrizar, si lo desplegas al inicio demoras 3 minutos en aterrizar."
+        },
+        {
+            "titulo": "¿Sabías que?",
+            "texto": "Aterrizando en picada, estás yendo a 89,4 m/s."
+        }
+    ]
+}

@@ -491,6 +491,14 @@
     color:      var(--text-muted);
 }
 
+/* En pantallas angostas el desplegable se ancla a todo el ancho de la barra
+   (.site-nav es fixed, así que funciona como contenedor del absolute). */
+@media (max-width: 600px) {
+    .notif-menu     { position: static; }
+    .notif-dropdown { top: 100%; left: 0.5rem; right: 0.5rem; width: auto; border-radius: 0 0 12px 12px; }
+    .notif-list     { max-height: 60vh; }
+}
+
 /* ══ HAMBURGER / MOBILE ══ */
 .hamburger { display: none; }
 .mobile-menu { display: none; }

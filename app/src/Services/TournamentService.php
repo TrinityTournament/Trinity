@@ -350,8 +350,10 @@ class TournamentService
         $torneos = $this->tournaments->allWithOrganizer();
 
         foreach ($torneos as &$t) {
-            $t['id']           = (int) $t['id'];
-            $t['estado_label'] = self::ESTADO_LABELS[$t['estado']] ?? ucfirst($t['estado']);
+            $t['id']                = (int) $t['id'];
+            $t['inscritos']         = (int) $t['inscritos'];
+            $t['max_participantes'] = (int) $t['max_participantes'];
+            $t['estado_label']      = self::ESTADO_LABELS[$t['estado']] ?? ucfirst($t['estado']);
         }
         unset($t);
 

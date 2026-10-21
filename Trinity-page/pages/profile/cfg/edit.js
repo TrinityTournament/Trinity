@@ -44,6 +44,7 @@ async function init() {
     wireGameLinks();
     wireCredentials();
     wirePasswordChange();
+    wireDeleteAccount();
 }
 
 async function loadProfile() {
@@ -704,4 +705,66 @@ async function handlePwdPaso2() {
         setMsg('pwd-paso2-msg', 'No se pudo conectar con el servidor.', 'err');
     }
     btn.disabled = false;
+}
+
+// ── ELIMINAR CUENTA ──────────────────────────────────────
+// Backend: app/users/delete-account.php (pide la contraseña como confirmación).
+
+function wireDeleteAccount() {
+    const modal = $('#delete-modal');
+    if (!modal) return;
+
+    const abrir = () => {
+        $('#delete-password').value = '';
+        setMsg('delete-msg', '', null);
+        $('#btn-delete-confirm').disabled = false;
+        modal.classList.add('open');
+        $('#delete-password').focus();
+    };
+    const cerrar = () => modal.classList.remove('open');
+
+    $('#btn-delete-account').addEventListener('click', abrir);
+    $('#delete-close').addEventListener('click', cerrar);
+    $('#btn-delete-cancel').addEventListener('click', cerrar);
+    modal.addEventListener('click', (e) => { if (e.target === modal) cerrar(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrar(); });
+
+    $('#delete-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await handleDeleteAccount();
+    });
+}
+
+async function handleDeleteAccount() {
+    const password = $('#delete-password').value;
+    if (!password) {
+        setMsg('delete-msg', 'Ingresá tu contraseña para confirmar.', 'err');
+        return;
+    }
+
+    const btn = $('#btn-delete-confirm');
+    btn.disabled = true;
+    setMsg('delete-msg', 'Eliminando...', null);
+
+    try {
+        const res  = await apiFetch(`${API_BASE_URL}/../app/users/delete-account.php`, {
+            method: 'POST',
+            body: JSON.stringify({ password }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+            setMsg('delete-msg', data.error || 'No se pudo eliminar la cuenta.', 'err');
+            btn.disabled = false;
+            return;
+        }
+
+        sessionStorage.removeItem('trinity_user');
+        setMsg('delete-msg', 'Tu cuenta fue eliminada. Redirigiendo...', 'ok');
+        setTimeout(() => { window.location.href = `${API_BASE_URL}/index.html`; }, 1200);
+    } catch (err) {
+        console.error('[edit.js]', err);
+        setMsg('delete-msg', 'No se pudo conectar con el servidor.', 'err');
+        btn.disabled = false;
+    }
 }

@@ -1,0 +1,10 @@
+# TRINITY — MySQL en Docker
+[mysqld]
+character-set-server = utf8mb4
+collation-server     = utf8mb4_unicode_ci
+# El contenedor no publica el puerto, pero igual: nada de DNS inverso en cada login.
+skip-name-resolve
+default-time-zone    = "-03:00"
+
+[client]
+default-character-set = utf8mb4

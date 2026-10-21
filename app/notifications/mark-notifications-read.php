@@ -15,6 +15,7 @@ SessionManager::start();
 
 Controller::handle(function () {
     Request::requireMethod('POST');
+    Auth::validateCsrf();
     $user = Auth::requireLogin();
 
     $body = Request::body();

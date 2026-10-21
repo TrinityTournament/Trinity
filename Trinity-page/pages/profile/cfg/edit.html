@@ -299,7 +299,7 @@
             <h2 class="edit-card-title danger-title">Zona de peligro</h2>
             <p class="edit-card-desc">Al eliminar tu cuenta se borrarán permanentemente todos tus datos, torneos e historial. Esta acción no se puede deshacer.</p>
             <div class="card-actions">
-                <button type="button" class="btn-danger">
+                <button type="button" class="btn-danger" id="btn-delete-account">
                     &#x1F5D1;&nbsp; Eliminar cuenta
                 </button>
             </div>
@@ -307,6 +307,26 @@
 
     </div>
 </main>
+
+<!-- ══ MODAL: ELIMINAR CUENTA ══ -->
+<div class="modal-overlay" id="delete-modal" role="dialog" aria-modal="true" aria-labelledby="delete-title">
+    <div class="modal-box">
+        <button type="button" class="modal-close" id="delete-close" aria-label="Cerrar">&times;</button>
+        <h3 class="modal-title danger-title" id="delete-title">Eliminar cuenta</h3>
+        <p class="modal-desc">Se borrarán de forma permanente tu perfil, tus inscripciones, tus equipos y los torneos que organizás. Esta acción no se puede deshacer.</p>
+        <form id="delete-form" novalidate>
+            <div class="field">
+                <label class="field-label" for="delete-password">Escribí tu contraseña para confirmar</label>
+                <input type="password" id="delete-password" class="field-input" autocomplete="current-password" placeholder="••••••••">
+            </div>
+            <div class="card-actions">
+                <button type="submit" class="btn-danger" id="btn-delete-confirm">Eliminar definitivamente</button>
+                <button type="button" class="btn-secondary" id="btn-delete-cancel">Cancelar</button>
+            </div>
+            <p class="msg" id="delete-msg"></p>
+        </form>
+    </div>
+</div>
 
 <!-- ══ MODAL: RECORTAR FOTO DE PERFIL ══ -->
 <div class="modal-overlay" id="cropper-modal">

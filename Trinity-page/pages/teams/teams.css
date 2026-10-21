@@ -1,4 +1,7 @@
-/* ══ Equipos — estilos propios ══ */
+/* ══ Equipos — estilos propios ══
+   MOBILE FIRST: las reglas base son para pantallas chicas (~360 px, una sola
+   columna) y las mejoras de escritorio entran con @media (min-width: ...)
+   al final del archivo (480 / 768 / 1024 px). */
 
 .team-banner {
     align-items: center;
@@ -61,7 +64,8 @@
 
 .team-stats {
     display: flex;
-    gap: 2rem;
+    flex-wrap: wrap;          /* en 360 px no se desborda si hay más de 3 datos */
+    gap: 1rem 1.5rem;
     justify-content: center;
     margin-top: 1rem;
 }
@@ -93,13 +97,13 @@
     font-weight: 700;
     flex-shrink: 0;
 }
-.member-info { flex: 1; }
-.member-name { font-weight: 600; }
+.member-info { flex: 1; min-width: 0; }   /* min-width:0 deja que el texto largo se corte en vez de empujar la fila */
+.member-name { font-weight: 600; overflow-wrap: anywhere; }
 .member-role { font-size: 12px; color: var(--text-muted); }
 
 /* ── Invitar miembros (crear-equipo.html) ── */
 
-.invite-input-row { display: flex; gap: 0.6rem; }
+.invite-input-row { display: flex; flex-direction: column; gap: 0.6rem; }   /* móvil: input arriba, botón abajo */
 .invite-input-row .field-input { flex: 1; }
 .invite-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
 .invite-chip {
@@ -126,4 +130,24 @@
     padding:     2.5rem 1rem;
     color:       var(--text-muted);
     font-size:   14px;
+}
+
+/* ══ Escritorio (mejoras progresivas) ══ */
+
+@media (min-width: 480px) {
+    .invite-input-row { flex-direction: row; }       /* input y botón en la misma línea */
+    .team-stats { gap: 2rem; }
+}
+
+@media (min-width: 768px) {
+    .team-header { padding: 7.5rem 5vw 3rem; gap: 0.75rem; }
+    .team-header-logo { width: 96px; height: 96px; font-size: 30px; }
+    .team-stat strong { font-size: 28px; }
+    .member-row { gap: 1.1rem; padding: 1rem 0; }
+    .member-avatar { width: 44px; height: 44px; }
+}
+
+@media (min-width: 1024px) {
+    .team-header { padding-left: 8vw; padding-right: 8vw; }
+    .team-stats { gap: 3rem; }
 }

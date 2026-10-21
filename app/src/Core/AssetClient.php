@@ -17,6 +17,14 @@ final class AssetClient {
      * @return array{mime:string, data:string}|null */
 
     public static function fetchAsset(string $relPath): ?array {
+        // Si hay ASSETS_DIR (Docker), se lee directo del disco y el sitio se ve
+        // completo aunque el bot no esté levantado. Sin esa variable, todo sigue
+        // igual que antes: se le pide el asset al bot por HTTP.
+        $local = self::fetchLocal($relPath);
+        if ($local !== null) {
+            return $local;
+        }
+
         $url = self::baseUrl() . '/api/assets?path=' . rawurlencode($relPath);
 
         $ch = curl_init($url);
@@ -41,6 +49,36 @@ final class AssetClient {
             'mime' => $headers['content_type'] ?? 'application/octet-stream',
             'data' => $raw,
         ];
+    }
+
+    /** Mismas defensas que WhatsApp/src/lib/assetStorage.js: solo extensiones de
+     *  imagen conocidas y la ruta resuelta no puede salir de ASSETS_DIR.
+     *
+     * @return array{mime:string, data:string}|null */
+    private static function fetchLocal(string $relPath): ?array {
+        $dir = trim(Env::get('ASSETS_DIR', ''));
+        if ($dir === '' || str_contains($relPath, "\0")) {
+            return null;
+        }
+
+        $mimes = [
+            'ico' => 'image/x-icon', 'png' => 'image/png', 'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg', 'webp' => 'image/webp', 'gif' => 'image/gif',
+            'svg' => 'image/svg+xml',
+        ];
+        $mime = $mimes[strtolower(pathinfo($relPath, PATHINFO_EXTENSION))] ?? null;
+        $root = realpath($dir);
+        if ($mime === null || $root === false) {
+            return null;
+        }
+
+        $file = realpath($root . DIRECTORY_SEPARATOR . $relPath);
+        if ($file === false || !str_starts_with($file, $root . DIRECTORY_SEPARATOR) || !is_file($file)) {
+            return null;
+        }
+
+        $data = file_get_contents($file);
+        return $data === false ? null : ['mime' => $mime, 'data' => $data];
     }
 
     private static function baseUrl(): string {

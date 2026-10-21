@@ -1,0 +1,20 @@
+# ═══════════════════════════════════════════════════════════════════
+#  TRINITY — Override de DESARROLLO (opcional)
+#
+#  Monta el código del equipo encima del que trae la imagen, así editás un
+#  .php/.js/.html y recargás el navegador SIN reconstruir la imagen.
+#  vendor/ sigue siendo el de la imagen (no se pisa).
+#
+#      docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+#  Para no escribir los dos -f cada vez, agregá esto a tu .env:
+#      COMPOSE_FILE=docker-compose.yml:docker-compose.dev.yml
+#  (en Windows el separador es ;  →  docker-compose.yml;docker-compose.dev.yml)
+#
+# ═══════════════════════════════════════════════════════════════════
+services:
+  web:
+    volumes:
+      - ./Trinity-page:/var/www/trinity/Trinity-page:ro
+      - ./app:/var/www/trinity/app:ro
+      # (El montaje de WhatsApp/assets del compose base se conserva tal cual.)

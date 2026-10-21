@@ -1,0 +1,7 @@
+node_modules
+.auth
+storage
+assets
+.env
+.vscode
+deno.lock

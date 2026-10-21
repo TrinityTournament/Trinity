@@ -384,9 +384,32 @@ class ProfileService
     }
 
     /** @return array<string,mixed> */
-    public function deleteAccount(int $userId): array
+    /** Elimina la cuenta del propio usuario. Pide la contraseña (confirmación
+      * de identidad: una sesión abierta en una compu ajena no alcanza para
+      * borrar la cuenta) y no deja que el único administrador se borre.
+      *
+      * OJO: los errores acá son 400/409 y NO 403, porque apiFetch muestra un
+      * alert() y corta ante cualquier 403 (pensado para "sin permisos").
+      *
+      * @return array<string,mixed> */
+    public function deleteAccount(int $userId, string $password = ''): array
     {
         $actual = $this->users->findById($userId);
+        if (!$actual) {
+            throw new ApiException('Usuario no encontrado.', 404);
+        }
+
+        if ($password === '' || !password_verify($password, (string) $actual['password'])) {
+            throw new ApiException('La contraseña es incorrecta.', 400);
+        }
+
+        if (($actual['rol'] ?? '') === 'admin' && $this->users->countAdmins() <= 1) {
+            throw new ApiException(
+                'Sos el único administrador: promové a otra persona antes de eliminar tu cuenta.',
+                409
+            );
+        }
+
         $fotoId = $actual['foto_url'] ?? null;
 
         try {

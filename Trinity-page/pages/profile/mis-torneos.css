@@ -1,4 +1,5 @@
-/* ══ Mis torneos — estilos propios ══ */
+/* ══ Mis torneos — estilos propios ══
+   MOBILE FIRST: base para ~360 px; escritorio con @media (min-width: 768px). */
 
 .mis-torneos-tabs { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
 
@@ -7,6 +8,9 @@
     font-size: 12.5px;
     font-weight: 700;
     padding: 0.5rem 1rem;
+    min-height: 40px;                 /* objetivo táctil cómodo en el celular */
+    display: inline-flex;
+    align-items: center;
     border-radius: 6px;
     color: var(--text-muted);
     border: 1px solid var(--border);
@@ -20,4 +24,10 @@
     padding:     2.5rem 1rem;
     color:       var(--text-muted);
     font-size:   14px;
+}
+
+/* ══ Escritorio ══ */
+@media (min-width: 768px) {
+    .mis-torneos-tabs { gap: 0.5rem; margin-bottom: 2rem; }
+    .round-tab { min-height: 0; padding: 0.5rem 1.1rem; }
 }

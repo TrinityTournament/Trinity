@@ -64,6 +64,29 @@ class OrganizerRequestModel
         });
     }
 
+    /** Solicitudes para el panel de administración: las pendientes primero y
+      * después las ya resueltas (más recientes arriba).
+      *
+      * @return array<int,array<string,mixed>> */
+    public function listForAdmin(int $limit = 100): array
+    {
+        return $this->guarded(function () use ($limit) {
+            $stmt = $this->pdo->prepare(
+                "SELECT s.id, s.estado, s.creado_en, s.resuelto_en,
+                        u.id AS usuario_id, u.nombre, u.usuario, u.torneos_jugados,
+                        a.usuario AS resuelto_por_usuario
+                 FROM   solicitudes_organizador s
+                 JOIN   usuarios u ON u.id = s.usuario_id
+                 LEFT   JOIN usuarios a ON a.id = s.resuelto_por
+                 ORDER  BY (s.estado = 'pendiente') DESC, s.creado_en DESC
+                 LIMIT  :limit"
+            );
+            $stmt->bindValue(':limit', max(1, min(200, $limit)), PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll();
+        });
+    }
+
     public function resolver(int $id, string $estado, int $adminId): bool
     {
         return $this->guarded(function () use ($id, $estado, $adminId) {

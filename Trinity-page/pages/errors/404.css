@@ -1,4 +1,5 @@
-/* ══ Error 404 — estilos propios ══ */
+/* ══ Error 404 — estilos propios ══
+   MOBILE FIRST: base para ~360 px; el número 404 ya escala solo con clamp(). */
 
 .error-page {
     display: flex;
@@ -7,8 +8,9 @@
     text-align: center;
     gap: 0.6rem;
     min-height: 100vh;
+    min-height: 100dvh;               /* en el celular 100vh ignora la barra del navegador */
     justify-content: center;
-    padding: 2rem;
+    padding: 1.5rem 1.25rem;
 }
 
 .error-code {
@@ -18,4 +20,9 @@
     letter-spacing: 4px;
     color: var(--accent);
     line-height: 1;
+}
+
+/* ══ Escritorio ══ */
+@media (min-width: 768px) {
+    .error-page { gap: 1rem; padding: 3rem; }
 }

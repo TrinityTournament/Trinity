@@ -415,3 +415,87 @@ body {
 .news-msg { min-height: 1.2em; font-size: 14px; }
 .news-msg.msg-error { color: #ff6b6b; }
 .news-msg.msg-ok    { color: #4ade80; }
+/* ── SECCIÓN AUDITORÍA (mobile-first: base móvil, escritorio con min-width) ── */
+.aud-filtros { display: grid; grid-template-columns: 1fr; gap: 0.9rem; margin-bottom: 1.5rem; }
+.aud-filtros .news-field input,
+.aud-filtros .news-field select {
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); padding: 9px 12px; font: inherit; width: 100%;
+}
+.aud-acciones { display: flex; gap: 0.6rem; align-items: flex-end; }
+.btn-secondary-admin {
+    background: transparent; border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); padding: 8px 14px; font: inherit; font-size: 13px; cursor: pointer;
+}
+.btn-secondary-admin:hover:not(:disabled) { border-color: var(--accent2); }
+.btn-secondary-admin:disabled { opacity: 0.4; cursor: default; }
+.aud-paginacion { display: flex; justify-content: space-between; align-items: center; gap: 0.6rem; margin-top: 1rem; font-size: 13px; color: var(--text-muted); }
+.aud-sistema { color: var(--text-muted); font-style: italic; }
+.aud-cascada { color: var(--text-muted); margin-left: 4px; }
+.badge.aud-insert { background: rgba(29,185,84,0.15);  color: var(--green); }
+.badge.aud-update { background: rgba(255,170,0,0.15);  color: #ffb02e; }
+.badge.aud-delete { background: rgba(192,0,10,0.15);   color: var(--accent2); }
+.aud-detalle td { background: rgba(255,255,255,0.02); }
+.aud-detalle pre { white-space: pre-wrap; word-break: break-word; font-size: 12px; max-height: 320px; overflow: auto; margin: 0; }
+.admin-table .aud-ver { padding: 4px 10px; }
+
+@media (min-width: 640px) {
+    .aud-filtros { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 1024px) {
+    .aud-filtros { grid-template-columns: repeat(6, 1fr); }
+    .aud-acciones { grid-column: 1 / -1; }
+}
+
+/* ── PANEL DINÁMICO: usuarios, solicitudes, torneos ───────── */
+.nav-badge {
+    margin-left:   auto;
+    min-width:     20px;
+    padding:       1px 7px;
+    border-radius: 10px;
+    background:    var(--accent);
+    color:         #fff;
+    font-family:   'Barlow Condensed', sans-serif;
+    font-size:     12px;
+    font-weight:   700;
+    text-align:    center;
+}
+
+.badge-pendiente { background: rgba(255,170,0,0.15); color: #ffb020; }
+.badge-aprobado  { background: rgba(29,185,84,0.15);  color: var(--green); }
+.badge-rechazado { background: rgba(192,0,10,0.08);   color: #c06060; }
+
+.acciones-celda { display: flex; gap: 6px; flex-wrap: wrap; }
+.admin-link { color: var(--text); text-decoration: none; font-weight: 600; }
+.admin-link:hover { color: var(--accent2); text-decoration: underline; }
+.rol-select:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.header-actions { flex-wrap: wrap; }
+
+/* Aviso flotante (resultado de cambiar un rol, aprobar una solicitud, etc.) */
+.admin-toast {
+    position:      fixed;
+    right:         1.25rem;
+    bottom:        1.25rem;
+    max-width:     min(360px, calc(100vw - 2.5rem));
+    padding:       12px 16px;
+    border-radius: 10px;
+    background:    #1a0000;
+    border:        1px solid rgba(29,185,84,0.45);
+    color:         var(--text);
+    font-size:     13px;
+    box-shadow:    0 12px 30px rgba(0,0,0,0.6);
+    opacity:       0;
+    transform:     translateY(8px);
+    pointer-events: none;
+    transition:    opacity 0.2s, transform 0.2s;
+    z-index:       300;
+}
+.admin-toast.show { opacity: 1; transform: translateY(0); }
+.admin-toast.err  { border-color: rgba(192,0,10,0.7); }
+
+@media (max-width: 640px) {
+    .header-actions { width: 100%; }
+    .header-actions .search-input,
+    .header-actions .filter-select { min-width: 0; flex: 1 1 100%; }
+}

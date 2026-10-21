@@ -1,0 +1,137 @@
+# ═══════════════════════════════════════════════════════════════════
+#  TRINITY — Entorno completo con Docker
+#
+#  Primer uso:
+#      cp .env.example .env        (en Windows: copy .env.example .env)
+#      docker compose up -d --build
+#      → http://localhost:8080
+#
+#  Servicios
+#    db        MySQL 8. En el PRIMER arranque (volumen vacío) ejecuta, en
+#              orden, los archivos de database/: crea la base, los usuarios
+#              con privilegios mínimos, los triggers de auditoría y carga
+#              datos de prueba.
+#    web       Apache + PHP 8.3: sirve el front-end y la API (/app/).
+#              Se construye con el Dockerfile de la raíz; su configuración
+#              (Apache, PHP) está en docker/.
+#    whatsapp  Bot de WhatsApp. OPCIONAL: solo con  --profile bot
+#              (requiere vincular un número real; el sitio funciona sin él).
+#    adminer   Cliente web de MySQL. OPCIONAL, solo desarrollo:  --profile dev
+#
+#  Desarrollo sin reconstruir la imagen (monta app/ y Trinity-page/):
+#      docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+#  Ver README.md para credenciales de prueba, backups y solución de problemas.
+# ═══════════════════════════════════════════════════════════════════
+name: trinity
+
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    # Sin "ports": MySQL NO se publica en tu máquina, solo es alcanzable por
+    # los otros contenedores (red trinity_net). Para entrar a mano:
+    #   docker compose exec db mysql -uroot -p trinity
+    environment:
+      TZ: America/Montevideo
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS:?Falta DB_ROOT_PASS en el .env (copiá .env.example a .env)}
+      MYSQL_DATABASE: ${DB_NAME:-trinity}
+      # Las leen database/02-dcl.sh y 04-seed.sh al inicializar:
+      DB_USER: ${DB_USER:-trinity_app}
+      DB_PASS: ${DB_PASS:?Falta DB_PASS en el .env}
+      DB_READONLY_PASS: ${DB_READONLY_PASS:?Falta DB_READONLY_PASS en el .env}
+      DB_BACKUP_PASS: ${DB_BACKUP_PASS:?Falta DB_BACKUP_PASS en el .env}
+      DB_MIGRATOR_PASS: ${DB_MIGRATOR_PASS:?Falta DB_MIGRATOR_PASS en el .env}
+      LOAD_SEED: ${LOAD_SEED:-1}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./docker/mysql.cnf:/etc/mysql/conf.d/trinity.cnf:ro
+      # UN solo montaje para toda la inicialización. MySQL ejecuta los archivos
+      # de la carpeta en orden alfabético (solo la primera vez, con volumen
+      # vacío): 01-schema.sql → 02-dcl.sh → 03-auditoria.sql → 04-seed.sh.
+      # Las subcarpetas (database/extras/: plantilla DCL y seed) las ignora el
+      # entrypoint; los scripts 02 y 04 las leen directamente.
+      - ./database:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # Por TCP a propósito: durante la inicialización MySQL corre sin red, así
+      # que el chequeo recién pasa cuando el servidor definitivo está listo.
+      test: ["CMD-SHELL", "mysqladmin ping -h127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    networks: [trinity_net]
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      TZ: America/Montevideo
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: ${DB_NAME:-trinity}
+      DB_USER: ${DB_USER:-trinity_app}
+      DB_PASS: ${DB_PASS:?Falta DB_PASS en el .env}
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      # Integraciones opcionales (vacías = esa función queda desactivada, sin romper nada):
+      BREVO_KEY: ${BREVO_KEY:-}
+      ADMIN_KEY: ${ADMIN_KEY:-}
+      FNKEY: ${FNKEY:-}
+      # Bot: si no está levantado, PHP lo detecta al instante y sigue funcionando.
+      WA_BOT_URL: ${WA_BOT_URL:-http://whatsapp:3001}
+      WA_SECRET: ${WA_SECRET:-}
+      # Imágenes del sitio: se leen del disco (no hace falta el bot para verlas).
+      ASSETS_DIR: /var/www/trinity/WhatsApp/assets
+    volumes:
+      # El código va dentro de la imagen; solo las imágenes del sitio se montan.
+      - ./WhatsApp/assets:/var/www/trinity/WhatsApp/assets:ro
+    ports:
+      - "${APP_PORT:-8080}:80"
+    networks: [trinity_net]
+
+  whatsapp:
+    profiles: ["bot"]
+    build:
+      context: ./WhatsApp
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      WA_PORT: "3001"
+      # Obligatoria: sin secreto la API del bot quedaría abierta a cualquiera de la red.
+      WA_SECRET: ${WA_SECRET:?Para usar el bot definí WA_SECRET en el .env (openssl rand -hex 24)}
+      # Escucha en toda la red interna de Docker (no en tu máquina: no hay "ports").
+      API_HOST: 0.0.0.0
+      API_URL: http://web
+    volumes:
+      - wa_auth:/app/.auth
+      - wa_storage:/app/storage
+      - ./WhatsApp/assets:/app/assets:ro
+    networks: [trinity_net]
+
+  # Cliente web de MySQL, SOLO PARA DESARROLLO. Se activa con  --profile dev  y queda
+  # accesible únicamente desde tu propia máquina (127.0.0.1), nunca desde la red.
+  adminer:
+    profiles: ["dev"]
+    image: adminer:4
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    ports:
+      - "127.0.0.1:${ADMINER_PORT:-8081}:8080"
+    networks: [trinity_net]
+
+volumes:
+  db_data:
+  wa_auth:
+  wa_storage:
+
+networks:
+  trinity_net:

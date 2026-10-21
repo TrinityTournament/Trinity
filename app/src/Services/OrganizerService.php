@@ -17,7 +17,7 @@ use Trinity\Models\UserModel;
   *      cargado, con instrucciones para responder /aprobar N o
   *      /rechazar N.
   *   4. El bot de WhatsApp (WhatsApp/main.js) detecta ese comando y
-  *      llama a resolveByPhone() vía api/tournaments/organizer/resolve.php,
+  *      llama a resolveByPhone() vía app/tournaments/organizer/resolve.php,
   *      autenticado con el mismo WA_SECRET que ya usa el resto del sistema. */
 class OrganizerService
 {
@@ -105,29 +105,88 @@ class OrganizerService
             return 'No tenés permisos de administrador en Trinity.';
         }
 
+        return $this->aplicarResolucion((int) $admin['id'], $solicitudId, $accion)['mensaje'];
+    }
+
+    /** Lista para el panel web de administración (pendientes primero).
+      *
+      * @return array{solicitudes: array<int,array<string,mixed>>, pendientes:int} */
+    public function listForAdmin(): array
+    {
+        $filas = $this->requests->listForAdmin();
+
+        $pendientes = 0;
+        foreach ($filas as &$f) {
+            $f['id']         = (int) $f['id'];
+            $f['usuario_id'] = (int) $f['usuario_id'];
+            $f['torneos_jugados'] = (int) $f['torneos_jugados'];
+            if ($f['estado'] === 'pendiente') {
+                $pendientes++;
+            }
+        }
+        unset($f);
+
+        return ['solicitudes' => $filas, 'pendientes' => $pendientes];
+    }
+
+    /** Misma resolución que hace el bot, pero desde el panel web: el admin
+      * ya está autenticado por sesión, así que no hace falta buscarlo por teléfono.
+      *
+      * @return array{mensaje:string, estado:string} */
+    public function resolveByAdmin(int $adminId, int $solicitudId, string $accion): array
+    {
+        if (!in_array($accion, ['aprobar', 'rechazar'], true)) {
+            throw new ApiException('Acción inválida. Usá "aprobar" o "rechazar".', 400);
+        }
+        if ($solicitudId <= 0) {
+            throw new ApiException('Se requiere el "id" de la solicitud.', 400);
+        }
+
+        $r = $this->aplicarResolucion($adminId, $solicitudId, $accion);
+        if (!$r['ok']) {
+            throw new ApiException($r['mensaje'], $r['codigo']);
+        }
+
+        return ['mensaje' => $r['mensaje'], 'estado' => (string) $r['estado']];
+    }
+
+    /** Lógica común del bot y del panel web.
+      *
+      * @return array{ok:bool, mensaje:string, codigo:int, estado:?string} */
+    private function aplicarResolucion(int $adminId, int $solicitudId, string $accion): array
+    {
         $solicitud = $this->requests->find($solicitudId);
         if (!$solicitud) {
-            return "No encontré la solicitud #{$solicitudId}.";
+            return ['ok' => false, 'mensaje' => "No encontré la solicitud #{$solicitudId}.", 'codigo' => 404, 'estado' => null];
         }
         if ($solicitud['estado'] !== 'pendiente') {
-            return "La solicitud #{$solicitudId} ya había sido " . $solicitud['estado'] . '.';
+            return ['ok' => false, 'mensaje' => "La solicitud #{$solicitudId} ya había sido " . $solicitud['estado'] . '.', 'codigo' => 409, 'estado' => null];
         }
 
         $nuevoEstado = $accion === 'aprobar' ? 'aprobado' : 'rechazado';
-        $this->requests->resolver($solicitudId, $nuevoEstado, (int) $admin['id']);
+
+        // resolver() solo actualiza si la solicitud sigue 'pendiente': si dos
+        // admins responden a la vez (web y WhatsApp), solo gana uno.
+        if (!$this->requests->resolver($solicitudId, $nuevoEstado, $adminId)) {
+            return ['ok' => false, 'mensaje' => "La solicitud #{$solicitudId} ya había sido resuelta.", 'codigo' => 409, 'estado' => null];
+        }
 
         $solicitante = $this->users->findById((int) $solicitud['usuario_id']);
         $usuarioTag  = $solicitante ? '@' . $solicitante['usuario'] : "usuario #{$solicitud['usuario_id']}";
 
         if ($nuevoEstado === 'aprobado') {
-            $this->users->setRole((int) $solicitud['usuario_id'], 'organizador');
+            // Solo se asciende a quien sigue siendo 'participante': si mientras
+            // tanto lo hicieron admin, aprobar no tiene que degradarlo.
+            if ($solicitante && ($solicitante['rol'] ?? 'participante') === 'participante') {
+                $this->users->setRole((int) $solicitud['usuario_id'], 'organizador');
+            }
             if ($solicitante && !empty($solicitante['telefono'])) {
                 WhatsAppClient::send(
                     $solicitante['telefono'],
                     '*TRINITY* — ¡Tu solicitud para ser organizador fue aprobada! Ya podés crear torneos.'
                 );
             }
-            return "Aprobado. {$usuarioTag} ya puede crear torneos.";
+            return ['ok' => true, 'mensaje' => "Aprobado. {$usuarioTag} ya puede crear torneos.", 'codigo' => 200, 'estado' => $nuevoEstado];
         }
 
         if ($solicitante && !empty($solicitante['telefono'])) {
@@ -136,6 +195,6 @@ class OrganizerService
                 '*TRINITY* — Tu solicitud para ser organizador fue rechazada. Podés volver a solicitarlo más adelante.'
             );
         }
-        return "Rechazado. Se avisó a {$usuarioTag}.";
+        return ['ok' => true, 'mensaje' => "Rechazado. Se avisó a {$usuarioTag}.", 'codigo' => 200, 'estado' => $nuevoEstado];
     }
 }

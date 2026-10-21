@@ -35,9 +35,14 @@ class AdminService
             throw new ApiException('No podés cambiar tu propio rol.', 403);
         }
 
-        if (!$this->users->setRole($targetId, $rol)) {
+        // Se verifica la existencia aparte: setRole() devuelve false también cuando
+        // el usuario ya tenía ese rol (MySQL cuenta 0 filas modificadas), y eso no
+        // es un "usuario no encontrado".
+        if (!$this->users->findById($targetId)) {
             throw new ApiException('Usuario no encontrado.', 404);
         }
+
+        $this->users->setRole($targetId, $rol);
 
         return [];
     }

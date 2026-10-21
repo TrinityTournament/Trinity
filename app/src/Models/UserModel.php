@@ -231,6 +231,13 @@ class UserModel
       * de organizador (ver OrganizerService).
       *
       * @return string[] */
+    /** Cantidad de administradores: se usa para impedir que el único admin
+      * borre su propia cuenta y deje el sistema sin nadie que lo administre. */
+    public function countAdmins(): int
+    {
+        return (int) $this->pdo->query("SELECT COUNT(*) FROM usuarios WHERE rol = 'admin'")->fetchColumn();
+    }
+
     public function adminPhones(): array
     {
         $stmt = $this->pdo->query("SELECT telefono FROM usuarios WHERE rol = 'admin' AND telefono IS NOT NULL AND telefono != ''");

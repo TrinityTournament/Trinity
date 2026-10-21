@@ -23,8 +23,8 @@
 //  (afuera de la página), no adentro. Por eso todas las llamadas
 //  usan `${API_BASE_URL}/../app/...` — el "../" sube un nivel desde
 //  la raíz de Trinity-page y entra a app/. Eso solo funciona si el
-//  servidor expone esa carpeta en esa ruta (ver router.php para el
-//  servidor embebido de PHP, o el Alias /app en apache/trinity.conf
+//  servidor expone esa carpeta en esa ruta (ver scripts/server/router.php para el
+//  servidor embebido de PHP, o el Alias /app en docker/apache.conf o scripts/server/trinity.conf
 //  para Apache).
 // ══════════════════════════════════════════════════════════
 

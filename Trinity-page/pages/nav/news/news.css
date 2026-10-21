@@ -15,7 +15,7 @@
 }
 
 /* ══ FILTROS (mismo criterio que rankings) ══ */
-.filters-wrap { padding: 0 5vw 1.5rem; }
+.filters-wrap { padding: 0 1rem 1.25rem; }
 
 .filters-scroll {
     display:        flex;
@@ -57,7 +57,7 @@
 
 .news-featured {
     display:        grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     background:     var(--card-bg);
     border:         1px solid var(--border);
     border-radius:  16px;
@@ -65,7 +65,7 @@
 }
 
 .news-featured-image {
-    min-height:      260px;
+    min-height: 180px;
     background:      linear-gradient(135deg, rgba(192,0,10,0.30), rgba(0,0,0,0.65));
     display:         flex;
     align-items:     center;
@@ -74,7 +74,7 @@
 .news-featured-placeholder { font-size: 64px; opacity: 0.85; }
 
 .news-featured-body {
-    padding:         2.25rem 2.25rem 2.25rem 2.5rem;
+    padding: 1.5rem;
     display:         flex;
     flex-direction:  column;
     gap:             0.85rem;
@@ -115,14 +115,15 @@
 .badge-anuncio        { background: rgba(120,140,255,0.15); color: #8aa0ff; }
 
 /* ══ RESPONSIVE ══ */
-@media (max-width: 760px) {
-    .news-featured { grid-template-columns: 1fr; }
-    .news-featured-image { min-height: 180px; }
-    .news-featured-body { padding: 1.5rem; }
+/* MOBILE FIRST: los valores base son los del celular; desde 761 px (escritorio) se restauran los amplios. */
+@media (min-width: 761px) {
+    .news-featured { grid-template-columns: 1fr 1fr; }
+    .news-featured-image { min-height: 260px; }
+    .news-featured-body { padding: 2.25rem 2.25rem 2.25rem 2.5rem; }
 }
 
-@media (max-width: 480px) {
-    .filters-wrap { padding: 0 1rem 1.25rem; }
+@media (min-width: 481px) {
+    .filters-wrap { padding: 0 5vw 1.5rem; }
 }
 
 /* ══ MODAL DE LECTURA ══ */

@@ -1,6 +1,7 @@
 <?php
 // ══════════════════════════════════════════════════════════
 //  TRINITY — Eliminar cuenta
+//  POST { password } — pide la contraseña actual como confirmación.
 // ══════════════════════════════════════════════════════════
 require_once __DIR__ . '/../config.php';
 
@@ -14,6 +15,9 @@ SessionManager::start();
 
 Controller::handle(function () {
     Request::requireMethod('POST');
+    Auth::validateCsrf();
     $user = Auth::requireLogin();
-    return (new ProfileService())->deleteAccount((int) $user['id']);
+
+    $body = Request::body();
+    return (new ProfileService())->deleteAccount((int) $user['id'], (string) ($body['password'] ?? ''));
 });

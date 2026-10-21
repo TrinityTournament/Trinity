@@ -106,7 +106,8 @@ class TournamentModel
                 'SELECT t.id, t.titulo, t.deporte, t.estado, t.fecha_inicio,
                         t.max_participantes, t.creado_en,
                         u.nombre  AS organizador_nombre,
-                        u.usuario AS organizador_usuario
+                        u.usuario AS organizador_usuario,
+                        (SELECT COUNT(*) FROM torneo_participantes tp WHERE tp.torneo_id = t.id) AS inscritos
                  FROM   torneos  t
                  JOIN   usuarios u ON u.id = t.organizador_id
                  ORDER  BY t.creado_en DESC'
@@ -307,7 +308,7 @@ class TournamentModel
             if ($e->getCode() === '42S02') {
                 throw new ApiException(
                     'Las tablas de torneos no existen en esta base de datos. '
-                    . 'Corré el database.sql actualizado (incluye torneos, '
+                    . 'Corré el database/01-schema.sql actualizado (incluye torneos, '
                     . 'torneo_participantes y torneo_invitaciones).',
                     501
                 );

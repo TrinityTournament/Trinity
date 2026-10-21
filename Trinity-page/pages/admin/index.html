@@ -23,6 +23,11 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                 Usuarios
             </a>
+            <a class="nav-item" href="#section-solicitudes">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>
+                Solicitudes
+                <span class="nav-badge" id="nav-solicitudes-badge" style="display:none;">0</span>
+            </a>
             <a class="nav-item" href="#section-torneos">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
                 Torneos
@@ -31,16 +36,16 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v13a2 2 0 0 1-2 2H8l-4 3V4Z"/><path d="M8 9h8M8 13h5"/></svg>
                 Noticias
             </a>
-            <a class="nav-item" href="#section-configuracion">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
-                Configuración
+            <a class="nav-item" href="#section-auditoria">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                Auditoría
             </a>
         </nav>
 
         <footer class="sidebar-footer">
             <div class="admin-info">
-                <div class="admin-avatar">A</div>
-                <span class="admin-name">Santiago R.</span>
+                <div class="admin-avatar" id="admin-avatar">A</div>
+                <span class="admin-name" id="admin-name">Administrador</span>
             </div>
             <div class="footer-actions">
                 <a href="../../index.html" class="btn-back">
@@ -59,54 +64,46 @@
             <header class="section-header">
                 <div>
                     <h1 class="section-title">Usuarios</h1>
-                    <p class="section-sub">128 usuarios registrados</p>
+                    <p class="section-sub" id="usr-sub">Cargando...</p>
                 </div>
                 <div class="header-actions">
-                    <input type="text" class="search-input" placeholder="Buscar por nombre o @usuario..." aria-label="Buscar por nombre o usuario">
+                    <select class="filter-select" id="usr-rol" aria-label="Filtrar usuarios por rol">
+                        <option value="">Todos los roles</option>
+                        <option value="admin">Admin</option>
+                        <option value="organizador">Organizador</option>
+                        <option value="participante">Participante</option>
+                    </select>
+                    <input type="text" class="search-input" id="usr-buscar" placeholder="Buscar por nombre, @usuario o email..." aria-label="Buscar usuarios">
                 </div>
             </header>
-
             <div class="table-wrap">
                 <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Usuario</th>
-                            <th>Email</th>
-                            <th>Rol</th>
-                            <th>Torneos</th>
-                            <th>Registro</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><div class="user-cell"><div class="user-cell-avatar">S</div><div><p class="user-cell-name">Santiago R.</p><p class="user-cell-user">@santiagor</p></div></div></td>
-                            <td>santiago@trinity.gg</td>
-                            <td><select class="rol-select"><option selected>Admin</option><option>Organizador</option><option>Participante</option></select></td>
-                            <td>5</td>
-                            <td>12 mar 2026</td>
-                        </tr>
-                        <tr>
-                            <td><div class="user-cell"><div class="user-cell-avatar">L</div><div><p class="user-cell-name">LuciaPro</p><p class="user-cell-user">@luciapro</p></div></div></td>
-                            <td>lucia@trinity.gg</td>
-                            <td><select class="rol-select"><option>Admin</option><option selected>Organizador</option><option>Participante</option></select></td>
-                            <td>12</td>
-                            <td>3 abr 2026</td>
-                        </tr>
-                        <tr>
-                            <td><div class="user-cell"><div class="user-cell-avatar">F</div><div><p class="user-cell-name">FacuGamer</p><p class="user-cell-user">@facugamer</p></div></div></td>
-                            <td>facu@trinity.gg</td>
-                            <td><select class="rol-select"><option>Admin</option><option>Organizador</option><option selected>Participante</option></select></td>
-                            <td>8</td>
-                            <td>20 abr 2026</td>
-                        </tr>
-                        <tr>
-                            <td><div class="user-cell"><div class="user-cell-avatar">N</div><div><p class="user-cell-name">NightFury</p><p class="user-cell-user">@nightfury</p></div></div></td>
-                            <td>nightfury@trinity.gg</td>
-                            <td><select class="rol-select"><option>Admin</option><option>Organizador</option><option selected>Participante</option></select></td>
-                            <td>6</td>
-                            <td>2 may 2026</td>
-                        </tr>
-                    </tbody>
+                    <thead><tr><th>Usuario</th><th>Email</th><th>Rol</th><th>Torneos</th><th>Registro</th></tr></thead>
+                    <tbody id="usr-body"><tr><td colspan="5" class="table-loading">Cargando...</td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: SOLICITUDES DE ORGANIZADOR -->
+        <section id="section-solicitudes" class="section">
+            <header class="section-header">
+                <div>
+                    <h2 class="section-title">Solicitudes de organizador</h2>
+                    <p class="section-sub" id="sol-sub">Cargando...</p>
+                </div>
+                <div class="header-actions">
+                    <select class="filter-select" id="sol-estado" aria-label="Filtrar solicitudes por estado">
+                        <option value="pendiente">Pendientes</option>
+                        <option value="">Todas</option>
+                        <option value="aprobado">Aprobadas</option>
+                        <option value="rechazado">Rechazadas</option>
+                    </select>
+                </div>
+            </header>
+            <div class="table-wrap">
+                <table class="admin-table">
+                    <thead><tr><th>Usuario</th><th>Torneos jugados</th><th>Solicitada</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <tbody id="sol-body"><tr><td colspan="5" class="table-loading">Cargando...</td></tr></tbody>
                 </table>
             </div>
         </section>
@@ -116,10 +113,10 @@
             <header class="section-header">
                 <div>
                     <h2 class="section-title">Torneos</h2>
-                    <p class="section-sub">24 torneos creados</p>
+                    <p class="section-sub" id="tor-sub">Cargando...</p>
                 </div>
                 <div class="header-actions">
-                    <select class="filter-select" aria-label="Filtrar torneos por estado">
+                    <select class="filter-select" id="tor-estado" aria-label="Filtrar torneos por estado">
                         <option value="">Todos los estados</option>
                         <option value="en_creacion">En creación</option>
                         <option value="abierto">Abierto</option>
@@ -127,55 +124,13 @@
                         <option value="finalizado">Finalizado</option>
                         <option value="cancelado">Cancelado</option>
                     </select>
+                    <input type="text" class="search-input" id="tor-buscar" placeholder="Buscar por torneo u organizador..." aria-label="Buscar torneos">
                 </div>
             </header>
-
             <div class="table-wrap">
                 <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Torneo</th>
-                            <th>Deporte</th>
-                            <th>Estado</th>
-                            <th>Organizador</th>
-                            <th>Fecha inicio</th>
-                            <th>Participantes</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Copa Trinity — Clash Royale</td>
-                            <td>Clash Royale</td>
-                            <td><span class="badge badge-abierto">Abierto</span></td>
-                            <td>Santiago R.</td>
-                            <td>14 ago 2026</td>
-                            <td>18 / 32</td>
-                        </tr>
-                        <tr>
-                            <td>Liga Trinity — Fortnite</td>
-                            <td>Fortnite</td>
-                            <td><span class="badge badge-en_curso">En curso</span></td>
-                            <td>LuciaPro</td>
-                            <td>1 jul 2026</td>
-                            <td>16 / 16</td>
-                        </tr>
-                        <tr>
-                            <td>Clasificatorio Dota 2</td>
-                            <td>Dota 2</td>
-                            <td><span class="badge badge-abierto">Abierto</span></td>
-                            <td>Santiago R.</td>
-                            <td>2 sep 2026</td>
-                            <td>9 / 24</td>
-                        </tr>
-                        <tr>
-                            <td>Brawl Open #3</td>
-                            <td>Brawl Stars</td>
-                            <td><span class="badge badge-finalizado">Finalizado</span></td>
-                            <td>FacuGamer</td>
-                            <td>10 jun 2026</td>
-                            <td>64 / 64</td>
-                        </tr>
-                    </tbody>
+                    <thead><tr><th>Torneo</th><th>Deporte</th><th>Estado</th><th>Organizador</th><th>Fecha inicio</th><th>Participantes</th></tr></thead>
+                    <tbody id="tor-body"><tr><td colspan="6" class="table-loading">Cargando...</td></tr></tbody>
                 </table>
             </div>
         </section>
@@ -231,24 +186,74 @@
             </div>
         </section>
 
-        <!-- SECCIÓN: CONFIGURACIÓN -->
-        <section id="section-configuracion" class="section">
+        <!-- SECCIÓN: AUDITORÍA (solo lectura — ver docs/auditoria.md) -->
+        <section id="section-auditoria" class="section">
             <header class="section-header">
                 <div>
-                    <h2 class="section-title">Configuración</h2>
-                    <p class="section-sub">Ajustes del sistema</p>
+                    <h2 class="section-title">Auditoría</h2>
+                    <p class="section-sub" id="aud-sub">Historial de cambios en la base de datos</p>
                 </div>
             </header>
-            <div class="placeholder-card">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
-                <p>Próximamente</p>
-                <span>Esta sección está en desarrollo.</span>
+
+            <form class="aud-filtros" id="aud-filtros">
+                <div class="news-field">
+                    <label for="aud-tabla">Tabla</label>
+                    <select id="aud-tabla"><option value="">Todas</option></select>
+                </div>
+                <div class="news-field">
+                    <label for="aud-accion">Acción</label>
+                    <select id="aud-accion">
+                        <option value="">Todas</option>
+                        <option value="INSERT">INSERT</option>
+                        <option value="UPDATE">UPDATE</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+                <div class="news-field">
+                    <label for="aud-registro">ID de registro</label>
+                    <input type="text" id="aud-registro" inputmode="numeric" placeholder="ej: 12">
+                </div>
+                <div class="news-field">
+                    <label for="aud-usuario">ID de usuario</label>
+                    <input type="text" id="aud-usuario" inputmode="numeric" placeholder="quién lo hizo">
+                </div>
+                <div class="news-field">
+                    <label for="aud-desde">Desde</label>
+                    <input type="date" id="aud-desde">
+                </div>
+                <div class="news-field">
+                    <label for="aud-hasta">Hasta</label>
+                    <input type="date" id="aud-hasta">
+                </div>
+                <div class="aud-acciones">
+                    <button type="submit" class="btn-primary-admin">Filtrar</button>
+                    <button type="button" class="btn-secondary-admin" id="aud-limpiar">Limpiar</button>
+                </div>
+            </form>
+
+            <div class="table-wrap">
+                <table class="admin-table">
+                    <thead><tr><th>#</th><th>Fecha</th><th>Usuario</th><th>Tabla</th><th>Registro</th><th>Acción</th><th>IP</th><th>Detalle</th></tr></thead>
+                    <tbody id="aud-body">
+                        <tr><td colspan="8" class="table-loading">Cargando...</td></tr>
+                    </tbody>
+                </table>
             </div>
+
+            <nav class="aud-paginacion" aria-label="Paginación de auditoría">
+                <button type="button" class="btn-secondary-admin" id="aud-prev">← Anterior</button>
+                <span id="aud-pagina">—</span>
+                <button type="button" class="btn-secondary-admin" id="aud-next">Siguiente →</button>
+            </nav>
         </section>
 
     </main>
 
+    <div class="admin-toast" id="admin-toast" role="status" aria-live="polite"></div>
+
 <script src="../../components/api.js"></script>
+    <script src="admin-panel.js"></script>
 <script src="admin-noticias.js"></script>
+<script src="admin-auditoria.js"></script>
 </body>
 </html>

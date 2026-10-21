@@ -1,6 +1,6 @@
 // ══════════════════════════════════════════════════════════
 //  TRINITY Bot — Servidor HTTP interno (Express)
-//  Recibe llamados desde PHP (api/src/Core/WhatsAppClient.php)
+//  Recibe llamados desde PHP (app/src/Core/WhatsAppClient.php)
 //  y los convierte en mensajes de WhatsApp vía zapo-js.
 //  Escucha en http://127.0.0.1:{WA_PORT}
 //
@@ -180,7 +180,12 @@ app.get('/api/assets', async (req, res) => {
 
 // ── Iniciar servidor ──────────────────────────────────────
 export function startApiServer(port = 3001) {
-    app.listen(port, '127.0.0.1', () => {
-        console.log(`[API] Escuchando en http://127.0.0.1:${port} (para el backend PHP)`);
+    // Por defecto SOLO loopback: la API del bot no debe quedar expuesta. En Docker
+    // el backend PHP está en OTRO contenedor, así que el compose define
+    // API_HOST=0.0.0.0 y publica el puerto únicamente en la red interna
+    // (nunca en el host). El secreto compartido (WA_SECRET) se sigue exigiendo.
+    const host = process.env.API_HOST || '127.0.0.1';
+    app.listen(port, host, () => {
+        console.log(`[API] Escuchando en http://${host}:${port} (para el backend PHP)`);
     });
 }

@@ -11,7 +11,7 @@ use Trinity\Core\Database;
  * existen en el perfil) y, para el filtro por disciplina, sobre
  * deportes_seleccionados / videojuegos_seleccionados con JSON_CONTAINS
  * (mismo patrón que UserModel::findTargetedBySport). Ver la nota en
- * database.sql sobre por qué esto es deliberado y no una tabla aparte.
+ * database/01-schema.sql sobre por qué esto es deliberado y no una tabla aparte.
  */
 class RankingModel
 {

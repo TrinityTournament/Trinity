@@ -1,0 +1,18 @@
+# Contexto de build de la imagen WEB (raíz del proyecto).
+# Lista blanca: se excluye todo y se vuelve a incluir solo lo que la imagen usa.
+# (El bot tiene su propio contexto y su propio .dockerignore en WhatsApp/.)
+*
+
+!composer.json
+!composer.lock
+!Trinity-page
+!app
+!docker/apache.conf
+!docker/security.conf
+!docker/php.ini
+
+# Excepciones dentro de lo incluido: nunca secretos ni basura.
+**/.env
+**/.env.*
+**/node_modules
+**/.DS_Store

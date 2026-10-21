@@ -1,26 +1,18 @@
 # ══════════════════════════════════════════════════════════
-#  TRINITY — .htaccess (raíz del proyecto)
-#  Requiere mod_rewrite habilitado y AllowOverride All
-#  (ver apache/trinity.conf).
+#  TRINITY — .htaccess del front-end (Trinity-page/)
+#  Requiere AllowOverride All (ver docker/apache.conf en Docker o
+#  scripts/server/trinity.conf en un servidor propio).
 # ══════════════════════════════════════════════════════════
 
 # ── Página 404 personalizada ──────────────────────────────
 ErrorDocument 404 /pages/errors/404.html
 
-# ── Carpetas que nunca deben servirse directamente ────────
-# (redundante con los <Directory> de apache/trinity.conf, se
-# deja también acá por si el vhost corre con AllowOverride All)
-#
-# api/src/ ya no existe acá: la API (app/src/) vive afuera de
-# Trinity-page, ver Alias /app + <Directory app/src> en
-# apache/trinity.conf (un .htaccess de este proyecto no puede
-# proteger una carpeta que está fuera de él).
-RewriteEngine On
-RewriteRule ^vendor/ - [F,L]
-RewriteRule ^scripts/ - [F,L]
-RewriteRule ^WhatsApp/ - [F,L]
-
 # ── Archivos sensibles ─────────────────────────────────────
+# vendor/, database/, scripts/ y docker/ ya no están dentro de Trinity-page/
+# (viven en la raíz del proyecto, fuera del DocumentRoot), así que no hace
+# falta bloquearlos acá. La API (app/) se expone aparte con `Alias /app` y se
+# protege en el vhost. Esto queda como red de seguridad por si algún día
+# aparece un archivo de configuración o un SQL dentro del front.
 <FilesMatch "^(\.env.*|composer\.(json|lock)|package(-lock)?\.json|.*\.sql)$">
     Require all denied
 </FilesMatch>

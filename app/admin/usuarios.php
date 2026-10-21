@@ -23,6 +23,7 @@ Controller::handle(function () {
     }
 
     if (Request::method() === 'PATCH') {
+        Auth::validateCsrf();
         $body = Request::body();
         return $service->changeRole(
             (int) $user['id'],
