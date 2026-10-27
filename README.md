@@ -6,7 +6,7 @@ Tercera entrega de **Programación Full Stack** — 3° año de BT Tecnologías 
 
 - **Front-end:** HTML, CSS y JavaScript vanilla (Mobile First, Flexbox/Grid)
 - **Back-end:** PHP 8.3 con arquitectura MVC por capas (Core → Models → Services → endpoints), PDO con consultas preparadas
-- **Base de datos:** MySQL 8 (compatible con MariaDB 10.5+)
+- **Base de datos:** MySQL 8.0+ (el esquema también carga en MariaDB, pero los triggers de auditoría usan `CAST(… AS JSON)` y requieren MySQL 8)
 - **Bot de WhatsApp (opcional):** Node 22, envía códigos de verificación y guarda imágenes subidas
 - **Despliegue:** Docker Compose
 
@@ -194,6 +194,7 @@ Asumen un servidor con MySQL local y `systemd`, por eso **no se tocaron para Doc
 | Recuperar contraseña | ❌ mismo motivo |
 | Subir foto de perfil / banner / logo | ❌ se guardan en el bot (`BotStorageClient`); sin él la API responde `502` con *"No se pudo guardar la foto ahora mismo"* y el resto del perfil sigue funcionando |
 | Estadísticas de Fortnite en el perfil | ❌ necesita `FNKEY` |
+| Perfil de Free Fire (UID, nivel, rango, clan) | ❌ necesita `FF_API_URL` (+ `FF_API_KEY` si tu API la pide). Para verlo funcionando sin la API real: `tools/mock-freefire-api.php` (instrucciones en su cabecera) |
 
 Para activar el bot: poné un `WA_SECRET` en el `.env` (`openssl rand -hex 24`), levantá `docker compose --profile bot up -d --build`, mirá el QR con `docker compose logs -f whatsapp` y vinculá un número. La sesión queda guardada en un volumen. Para correos: poné `BREVO_KEY`.
 
@@ -234,5 +235,5 @@ Los cuatro CSS que no tenían ningún `@media` (`teams.css`, `mis-torneos.css`, 
 
 ## 10. Seguridad: lo que hay que hacer vos
 
-- **Rotar las claves.** El paquete original traía un `.env` con claves reales (`BREVO_KEY`, `WA_SECRET`, `ADMIN_KEY`, `FNKEY`, contraseñas de BD), un `database/extras/dcl.sql` con contraseñas de los usuarios de base de datos, y `scripts/server/wacheck.sh` tenía el `WA_SECRET` **escrito en el código**, junto a una URL de ngrok, un teléfono y un correo personales. Todo eso se sacó del paquete de entrega, pero **si alguna vez se compartió o subió a un repositorio, hay que considerarlo comprometido**: regenerá la clave de Brevo, el `WA_SECRET`, la `ADMIN_KEY`, la de Fortnite y las contraseñas de MySQL, y si estuvo en git, limpiá el historial.
+- **Rotar las claves.** El paquete original traía un `.env` con claves reales (`BREVO_KEY`, `WA_SECRET`, `ADMIN_KEY`, `FNKEY`, contraseñas de BD), un `database/extras/dcl.sql` con contraseñas de los usuarios de base de datos, y `scripts/server/wacheck.sh` tenía el `WA_SECRET` **escrito en el código**, junto a una URL de ngrok, un teléfono y un correo personales. Todo eso se sacó del paquete de entrega, pero **si alguna vez se compartió o subió a un repositorio, hay que considerarlo comprometido**: regenerá la clave de Brevo, el `WA_SECRET`, la `ADMIN_KEY`, la de Fortnite, la de Free Fire (`FF.js` la traía escrita en el código; ese archivo se retiró) y las contraseñas de MySQL, y si estuvo en git, limpiá el historial.
 - El `.gitignore` excluye `.env`, `database/extras/dcl.sql`, `vendor/`, `node_modules/`, la sesión del bot y las subidas.

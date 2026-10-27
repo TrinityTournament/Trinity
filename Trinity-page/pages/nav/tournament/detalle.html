@@ -40,6 +40,7 @@
 <nav class="subnav">
     <a href="#info">Información</a>
     <a href="#participantes">Participantes</a>
+    <a href="#gestionar" id="nav-gestionar" hidden>Gestionar</a>
     <a href="#calendario" id="nav-calendario" hidden>Calendario</a>
     <a href="#resultados" id="nav-resultados" hidden>Resultados</a>
     <a href="#posiciones" id="nav-posiciones" hidden>Posiciones</a>
@@ -77,6 +78,75 @@
                 <tr><td colspan="4">Cargando...</td></tr>
             </tbody>
         </table>
+    </div>
+</section>
+
+<section id="gestionar" class="content-section" hidden>
+    <h2 class="content-section-title">Gestionar torneo</h2>
+
+    <div class="manage-grid">
+        <div class="form-card manage-card">
+            <h3 class="manage-title">Invitar jugadores</h3>
+            <p class="field-hint" id="t-invite-hint"></p>
+            <div class="field">
+                <label class="field-label" for="t-invite-q">Buscar por nombre o usuario</label>
+                <input class="field-input" type="text" id="t-invite-q" placeholder="Ej: juan" autocomplete="off" maxlength="50">
+            </div>
+            <ul class="invite-results" id="t-invite-results"></ul>
+
+            <h4 class="manage-subtitle">Invitaciones enviadas</h4>
+            <div class="data-table-wrap">
+                <table class="data-table">
+                    <thead><tr><th>Jugador</th><th>Estado</th></tr></thead>
+                    <tbody id="t-invitaciones-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <form class="form-card manage-card" id="t-edit-form" novalidate>
+            <h3 class="manage-title">Editar torneo</h3>
+            <p class="field-hint">La disciplina no se puede cambiar una vez creado el torneo.</p>
+
+            <div class="field">
+                <label class="field-label" for="te-titulo">Nombre del torneo</label>
+                <input class="field-input" type="text" id="te-titulo" maxlength="120">
+            </div>
+            <div class="field-row cols-2">
+                <div class="field">
+                    <label class="field-label" for="te-cupo">Cupo máximo</label>
+                    <input class="field-input" type="number" id="te-cupo" min="2" max="1000">
+                </div>
+                <div class="field">
+                    <label class="field-label" for="te-fecha">Fecha de inicio</label>
+                    <input class="field-input" type="date" id="te-fecha">
+                </div>
+            </div>
+            <div class="field-row cols-2">
+                <div class="field">
+                    <label class="field-label" for="te-formato">Formato</label>
+                    <select class="field-select" id="te-formato">
+                        <option value="Liga">Liga</option>
+                        <option value="Eliminación directa">Eliminación directa</option>
+                        <option value="Sistema suizo">Sistema suizo</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label class="field-label" for="te-visibilidad">Visibilidad</label>
+                    <select class="field-select" id="te-visibilidad">
+                        <option value="Público">Público</option>
+                        <option value="Privado (solo con invitación)">Privado (solo con invitación)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="field">
+                <label class="field-label" for="te-desc">Descripción</label>
+                <textarea class="field-textarea" id="te-desc" maxlength="1000"></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary" id="btn-guardar-edicion">Guardar cambios</button>
+            </div>
+            <p class="form-note" id="te-msg" role="status"></p>
+        </form>
     </div>
 </section>
 

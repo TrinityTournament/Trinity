@@ -14,5 +14,8 @@ SessionManager::start();
 Controller::handle(function () {
     Request::requireMethod('POST');
     $body = Request::body();
-    return (new AuthService())->requestPasswordReset(trim((string) ($body['email'] ?? '')));
+    return (new AuthService())->requestPasswordReset(
+        trim((string) ($body['email'] ?? '')),
+        trim((string) ($body['telefono'] ?? ''))
+    );
 });

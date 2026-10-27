@@ -1,8 +1,5 @@
 <?php
-// ══════════════════════════════════════════════════════════
-//  TRINITY — Marcar notificaciones como leídas
-//  Body: { id: int } → marca una sola | { all: true } → marca todas
-// ══════════════════════════════════════════════════════════
+
 require_once __DIR__ . '/../config.php';
 
 use Trinity\Core\Auth;

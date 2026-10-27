@@ -82,6 +82,8 @@ services:
       BREVO_KEY: ${BREVO_KEY:-}
       ADMIN_KEY: ${ADMIN_KEY:-}
       FNKEY: ${FNKEY:-}
+      FF_API_URL: ${FF_API_URL:-}
+      FF_API_KEY: ${FF_API_KEY:-}
       # Bot: si no está levantado, PHP lo detecta al instante y sigue funcionando.
       WA_BOT_URL: ${WA_BOT_URL:-http://whatsapp:3001}
       WA_SECRET: ${WA_SECRET:-}

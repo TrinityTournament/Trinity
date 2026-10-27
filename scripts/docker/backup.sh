@@ -1,19 +1,5 @@
 #!/usr/bin/env bash
-# ═══════════════════════════════════════════════════════════════════
-#  TRINITY — Backup de la base de datos del stack Docker
-#
-#  Equivale a scripts/server/backup.sh (que es para un servidor Linux con
-#  MySQL instalado), pero corriendo mysqldump DENTRO del contenedor `db`.
-#
-#      ./scripts/docker/backup.sh               → ./backups/trinity_AAAA-MM-DD_HH-MM.sql.gz
-#      ./scripts/docker/backup.sh /ruta/carpeta → en otra carpeta
-#
-#  · Usa el usuario trinity_backup (solo lectura + LOCK TABLES + TRIGGER).
-#  · Incluye triggers (la auditoría) y rutinas.
-#  · Conserva los últimos 7 backups de esa carpeta.
-#  Para automatizarlo (cron en el equipo que corre Docker):
-#      0 3 * * *  cd /ruta/al/proyecto && ./scripts/docker/backup.sh >> backups/backup.log 2>&1
-# ═══════════════════════════════════════════════════════════════════
+
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 
@@ -23,8 +9,7 @@ mkdir -p "$DEST"
 ARCHIVO="$DEST/trinity_$(date +%Y-%m-%d_%H-%M).sql.gz"
 
 echo "[backup] Volcando la base de datos..."
-# La clave se lee DENTRO del contenedor (variable DB_BACKUP_PASS) y viaja por MYSQL_PWD:
-# no pasa por tu terminal ni queda en el historial.
+
 if ! docker compose exec -T db sh -c \
     'MYSQL_PWD="$DB_BACKUP_PASS" mysqldump -utrinity_backup --single-transaction --no-tablespaces --routines --triggers --set-gtid-purged=OFF "$MYSQL_DATABASE"' \
     | gzip > "$ARCHIVO"; then
@@ -33,9 +18,6 @@ if ! docker compose exec -T db sh -c \
     exit 1
 fi
 
-# Verificación mínima: que sea un gzip válido y tenga tablas dentro.
-# (grep -c lee todo el flujo; con `grep -q` + pipefail, gzip recibiría SIGPIPE y un backup
-#  bueno se descartaría por error.)
 TABLAS=0
 if gzip -t "$ARCHIVO" 2>/dev/null; then
     TABLAS=$(gzip -dc "$ARCHIVO" | grep -c "^CREATE TABLE" || true)

@@ -259,7 +259,7 @@ async function openAccCheck(gameId, destino) {
         if (!identifier) {
             body.innerHTML = accCheckWarn(
                 `Todavía no vinculaste tu cuenta de ${game.label}.`,
-                '../profile/cfg/edit.html', 'Vincular ahora'
+                '../../profile/cfg/edit.html', 'Vincular ahora'
             );
             return;
         }

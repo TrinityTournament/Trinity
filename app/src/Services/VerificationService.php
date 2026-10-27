@@ -70,7 +70,7 @@ class VerificationService
       * @return array<string,mixed> */
     public function sendPhoneCode(string $telefono, bool $cambioCredencial, bool $cambioPassword): array
     {
-        $telNorm = preg_replace('/[^0-9]/', '', $telefono);
+        $telNorm = UserModel::normalizePhone($telefono);
         if (strlen($telNorm) < 7) {
             throw new ApiException('Número de teléfono inválido.', 400);
         }
@@ -132,6 +132,16 @@ class VerificationService
         }
         if (!$email && !$telefono) {
             throw new ApiException('Se requiere email o teléfono.', 400);
+        }
+
+        // El código se guardó con el teléfono normalizado (sendPhoneCode): acá se
+        // usa la misma forma, venga como venga escrito ("+598 99 123 456", etc.),
+        // y es también como se guarda la cuenta.
+        if ($telefono !== '') {
+            $telefono = UserModel::normalizePhone($telefono);
+            if (strlen($telefono) < 7) {
+                throw new ApiException('Número de teléfono inválido.', 400);
+            }
         }
 
         $sessionKey = $email ?: $telefono;

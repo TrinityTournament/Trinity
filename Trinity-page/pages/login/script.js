@@ -345,9 +345,15 @@ async function crearCuenta() {
 async function manejarRecuperar(e) {
     e.preventDefault();
 
-    const email = document.getElementById('forgot-email').value.trim();
-    if (!email) {
-        setMensaje('msg-forgot', 'Ingresá tu email.', 'error');
+    const valor = document.getElementById('forgot-email').value.trim();
+    if (!valor) {
+        setMensaje('msg-forgot', 'Ingresá tu email o teléfono.', 'error');
+        return;
+    }
+    // Con "@" es un email; si no, un teléfono (cuentas registradas solo con WhatsApp).
+    const esEmail = valor.includes('@');
+    if (!esEmail && valor.replace(/[^0-9]/g, '').length < 7) {
+        setMensaje('msg-forgot', 'Ingresá un email o un teléfono válido.', 'error');
         return;
     }
 
@@ -358,14 +364,16 @@ async function manejarRecuperar(e) {
     try {
         const res = await apiFetch(`${API_BASE_URL}/../app/auth/request-reset.php`, {
             method: 'POST',
-            body: JSON.stringify({ email }),
+            body: JSON.stringify(esEmail ? { email: valor } : { telefono: valor }),
         });
 
         // Siempre mostramos el mismo mensaje exista o no la cuenta
         // (así no se puede usar este formulario para descubrir emails
         // registrados) — el backend hace lo mismo del lado servidor.
         if (res.ok) {
-            setMensaje('msg-forgot', 'Si el email existe, te enviamos un link para restablecer tu contraseña.', 'ok');
+            setMensaje('msg-forgot', esEmail
+                ? 'Si el email existe, te enviamos un link para restablecer tu contraseña.'
+                : 'Si el teléfono existe, te enviamos un link por WhatsApp para restablecer tu contraseña.', 'ok');
         } else {
             setMensaje('msg-forgot', await leerError(res), 'error');
         }

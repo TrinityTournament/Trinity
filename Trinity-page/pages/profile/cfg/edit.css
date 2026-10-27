@@ -596,3 +596,6 @@ main.edit-layout {
     width:   100%;
     accent-color: var(--accent);
 }
+
+/* Selector extra dentro de una fila de vinculación (ej. región de Free Fire) */
+.gamelink-region { flex: 0 0 auto; width: auto; max-width: 9.5rem; padding-right: 1.6rem; }

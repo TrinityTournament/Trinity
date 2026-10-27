@@ -1,22 +1,22 @@
 {
-    "brawl stars": [
+    "clash royale": [
         {
             "titulo": "Recomendaciones para tus partidas",
-            "texto": "Si el rival juega una carta cara detrás de su torre, atacá la linea contraria. Vas a lograr mucho daño."
+            "texto": "Si el rival juega una carta cara detrás de su torre, atacá la línea contraria. Vas a lograr mucho daño."
         },
         {
             "titulo": "Recomendaciones para tus partidas",
-            "texto": "Contá el elixir de tu rival. En x1, cada 3 segundos se obtiene una gota de elixir, en x2 cada 1.5 segundos y en x3, cada un segundo."
+            "texto": "Contá el elixir de tu rival. En x1, cada 2.8 segundos se obtiene una gota de elixir, en x2 cada 1.4 segundos y en x3, cada 0.9 segundos."
         },
         {
             "titulo": "Recomendaciones para tus partidas",
-            "texto": "Si sabes que el rival tiene un hechizo, no acumules muchas cartas debiles"
+            "texto": "Si sabés que el rival tiene un hechizo, no acumules muchas cartas débiles."
         }
     ],
     "fortnite": [
         {
             "titulo": "¿Sabías que?",
-            "texto": "El jugador tarda 63 segundos en recorrer los 850 metros de altura hasta la isla sin desplegar el paracaídas."
+            "texto": "El jugador tarda aproximadamente 63 segundos en recorrer los 850 metros de altura hasta la isla sin desplegar el paracaídas."
         },
         {
             "titulo": "¿Sabías que?",
@@ -24,11 +24,103 @@
         },
         {
             "titulo": "¿Sabías que?",
-            "texto": "El paracaidas puede cambiar lo que demoras en aterrizar, si lo desplegas al inicio demoras 3 minutos en aterrizar."
+            "texto": "El paracaídas puede cambiar cuánto demorás en aterrizar. Si lo desplegás al inicio, podés tardar varios minutos en llegar al suelo."
         },
         {
             "titulo": "¿Sabías que?",
-            "texto": "Aterrizando en picada, estás yendo a 89,4 m/s."
+            "texto": "Aterrizando en picada, podés alcanzar una velocidad aproximada de 89,4 m/s."
+        }
+    ],
+    "brawl stars": [
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Aprovechá los arbustos para esconderte y sorprender a tus rivales. Recordá que algunos ataques pueden revelar tu posición."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "No gastes todos tus ataques al mismo tiempo. Administrá la munición para tener disparos disponibles cuando aparezca un rival."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Si tenés poca vida, retrocedé y buscá recuperarte antes de volver a combatir. Sobrevivir puede ser más importante que perseguir a un rival."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Prestá atención al modo de juego. En Atrapagemas, por ejemplo, conservar las gemas puede ser más importante que perseguir eliminaciones."
+        },
+        {
+            "titulo": "¿Sabías que?",
+            "texto": "Los brawlers tienen diferentes alcances, velocidades de movimiento y formas de atacar, por lo que elegir uno adecuado para cada mapa puede cambiar el resultado de una partida."
+        }
+    ],
+    "futbol": [
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Levantá la cabeza antes de recibir la pelota. Así podés identificar compañeros libres y decidir más rápido qué hacer."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Si un defensor te presiona, podés realizar un pase de primera para evitar perder la pelota."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "No todos los tiros deben ser fuertes. Cuando estás cerca del arco, colocar la pelota lejos del arquero puede ser más efectivo."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Cuando tu equipo pierde la pelota, intentá recuperar la posición defensiva antes de salir a presionar sin organización."
+        },
+        {
+            "titulo": "¿Sabías que?",
+            "texto": "Un partido de fútbol profesional dura normalmente 90 minutos, divididos en dos tiempos de 45 minutos, sin contar el tiempo adicional."
+        }
+    ],
+    "minecraft": [
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Antes de explorar una cueva, llevá antorchas, comida, armas y un pico. Así vas a estar mejor preparado para enfrentar enemigos y conseguir minerales."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Marcá el camino cuando explores lugares desconocidos. Podés utilizar antorchas o construir referencias para encontrar la salida."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Si estás empezando una partida, conseguí madera y fabricá herramientas básicas lo antes posible para avanzar más rápido."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Construí un refugio antes de que llegue la noche. Así vas a tener un lugar seguro para evitar a los enemigos que aparecen en la oscuridad."
+        },
+        {
+            "titulo": "¿Sabías que?",
+            "texto": "Un día completo en Minecraft dura 20 minutos en tiempo real: aproximadamente 10 minutos de día y 7 minutos de noche, con períodos de amanecer y atardecer."
+        }
+    ],
+    "free fire": [
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Elegí dónde aterrizar teniendo en cuenta la cantidad de enemigos y el equipamiento que podés conseguir. Aterrizar en una zona concurrida puede darte buenas recompensas, pero también aumenta el riesgo."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "No te quedes demasiado tiempo fuera de la zona segura. Revisá el mapa y anticipá tus movimientos para evitar recibir daño de la zona."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Usá las paredes gloo para cubrirte cuando estés expuesto durante un enfrentamiento. Colocarlas en el momento adecuado puede darte tiempo para recuperarte o contraatacar."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Llevá armas para diferentes distancias. Un arma adecuada para el combate cercano no siempre será la mejor opción para atacar enemigos lejanos."
+        },
+        {
+            "titulo": "Recomendaciones para tus partidas",
+            "texto": "Si jugás en equipo, comunicá la posición de los enemigos y coordiná los movimientos con tus compañeros para evitar quedar aislados."
+        },
+        {
+            "titulo": "¿Sabías que?",
+            "texto": "Free Fire utiliza una zona segura que se va reduciendo durante la partida, obligando a los jugadores a acercarse y aumentando los enfrentamientos."
         }
     ]
 }

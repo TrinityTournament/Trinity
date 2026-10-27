@@ -13,7 +13,10 @@ const BANNER_POR_DEPORTE = {
 
 let torneoActual = null;
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+    wireGestion();
+    init();
+});
 
 // El JSON usa como clave el nombre del juego en minúsculas y sin tildes
 // ("brawl stars", "clash royale", "futbol"...). Si el juego no tiene
@@ -79,9 +82,15 @@ async function init() {
     }
 
     try {
-        const res  = await apiFetch(`${API_BASE_URL}/../app/tournaments/detail.php?id=${encodeURIComponent(id)}`);
+        // fetch directo (y no apiFetch): es un GET público y apiFetch responde a todo
+        // 403 con una alerta + excepción, y un torneo privado ES un 403 esperable
+        // que acá se muestra como mensaje en la página.
+        const res  = await fetch(`${API_BASE_URL}/../app/tournaments/detail.php?id=${encodeURIComponent(id)}`, { credentials: 'include' });
         const data = await res.json().catch(() => ({}));
 
+        if (res.status === 403) {
+            return mostrarError(`${data.error || 'No tenés acceso a este torneo.'} Si te invitaron, iniciá sesión con tu cuenta.`);
+        }
         if (!res.ok) {
             return mostrarError(data.error || 'No se pudo cargar el torneo.');
         }
@@ -129,6 +138,7 @@ function render(t) {
     $('#t-actions').innerHTML = buildActionsHtml(t);
     wireActions(t);
     renderOrgActions(t);
+    renderGestion(t);
 
     $('#t-descripcion').textContent = t.descripcion || 'El organizador todavía no cargó una descripción.';
     $('#t-deporte').textContent   = t.deporte;
@@ -159,6 +169,13 @@ function buildActionsHtml(t) {
     if (t.ya_inscripto) {
         return `<button type="button" class="btn-secondary" id="btn-cancelar-inscripcion">Cancelar inscripción</button>${volver}`;
     }
+    // Invitación pendiente (también en un borrador: el organizador invita antes de abrir).
+    if (t.invitacion_id && (t.estado === 'en_creacion' || t.estado === 'abierto')) {
+        return `
+            <button type="button" class="btn-primary" id="btn-aceptar-invitacion">Aceptar invitación</button>
+            <button type="button" class="btn-secondary" id="btn-rechazar-invitacion">Rechazar</button>
+            ${volver}`;
+    }
     if (!t.inscripcion_abierta) {
         return `<button type="button" class="btn-primary" disabled>Inscripciones cerradas</button>${volver}`;
     }
@@ -168,7 +185,48 @@ function buildActionsHtml(t) {
     return `<a href="inscripcion.html?id=${t.id}" class="btn-primary">Inscribirme</a>${volver}`;
 }
 
+// Responde la invitación pendiente del usuario (aceptar / rechazar).
+async function responderInvitacion(t, aceptar, btn) {
+    const textoOriginal = btn.textContent;
+    document.querySelectorAll('#btn-aceptar-invitacion, #btn-rechazar-invitacion').forEach((b) => { b.disabled = true; });
+    btn.textContent = 'Un momento...';
+
+    try {
+        const res  = await apiFetch(`${API_BASE_URL}/../app/tournaments/invitations.php`, {
+            method: 'PATCH',
+            body: JSON.stringify({ id: t.invitacion_id, aceptar }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+            alert(data.error || 'No se pudo responder la invitación.');
+            document.querySelectorAll('#btn-aceptar-invitacion, #btn-rechazar-invitacion').forEach((b) => { b.disabled = false; });
+            btn.textContent = textoOriginal;
+            return;
+        }
+
+        // Si rechaza un torneo privado ya no tiene acceso a verlo: se lo lleva al listado.
+        if (!aceptar && t.visibilidad === 'privado') {
+            window.location.href = 'tournament.html';
+            return;
+        }
+        init();
+    } catch (err) {
+        console.error('[detalle.js]', err);
+        alert('No se pudo conectar con el servidor.');
+        document.querySelectorAll('#btn-aceptar-invitacion, #btn-rechazar-invitacion').forEach((b) => { b.disabled = false; });
+        btn.textContent = textoOriginal;
+    }
+}
+
 function wireActions(t) {
+    const aceptar  = document.getElementById('btn-aceptar-invitacion');
+    const rechazar = document.getElementById('btn-rechazar-invitacion');
+    if (aceptar)  aceptar.addEventListener('click',  () => responderInvitacion(t, true,  aceptar));
+    if (rechazar) rechazar.addEventListener('click', () => {
+        if (confirm('¿Rechazar la invitación a este torneo?')) responderInvitacion(t, false, rechazar);
+    });
+
     const btn = document.getElementById('btn-cancelar-inscripcion');
     if (!btn) return;
 
@@ -196,6 +254,11 @@ function wireActions(t) {
 }
 
 // ── Acciones exclusivas del organizador ─────────────────────
+// Qué puede hacer según el estado del torneo:
+//   en_creacion → abrir inscripciones, iniciar, eliminar (si está vacío) / cancelar (si ya tiene gente)
+//   abierto     → iniciar, cancelar
+//   en_curso    → cargar resultados, cancelar
+//   finalizado / cancelado → nada
 function renderOrgActions(t) {
     const el = $('#t-org-actions');
     if (!t.es_organizador) {
@@ -203,20 +266,104 @@ function renderOrgActions(t) {
         return;
     }
 
+    const partes = [];
+
     if (t.estado === 'en_creacion' || t.estado === 'abierto') {
         const puedeIniciar = t.inscritos >= 2;
-        el.innerHTML = `
-            <button type="button" class="btn-primary" id="btn-iniciar-torneo" ${puedeIniciar ? '' : 'disabled'}>Iniciar torneo</button>
-            ${puedeIniciar ? '' : '<span class="field-hint">Necesitás al menos 2 participantes para iniciar.</span>'}
-        `;
-        if (puedeIniciar) {
-            $('#btn-iniciar-torneo').addEventListener('click', iniciarTorneo);
+        if (t.estado === 'en_creacion') {
+            partes.push('<p class="field-hint" style="width:100%;margin:0;">Este torneo es un borrador: todavía nadie puede inscribirse. Invitá jugadores o abrí las inscripciones.</p>');
+            partes.push('<button type="button" class="btn-primary" id="btn-abrir-torneo">Abrir inscripciones</button>');
+        }
+        partes.push(`<button type="button" class="${t.estado === 'en_creacion' ? 'btn-secondary' : 'btn-primary'}" id="btn-iniciar-torneo" ${puedeIniciar ? '' : 'disabled'}>Iniciar torneo</button>`);
+        if (!puedeIniciar) {
+            partes.push('<span class="field-hint">Necesitás al menos 2 participantes para iniciar.</span>');
         }
     } else if (t.estado === 'en_curso') {
-        el.innerHTML = `<a href="resultados.html?id=${t.id}" class="btn-primary">Cargar resultados</a>`;
-    } else {
-        el.innerHTML = '';
+        partes.push(`<a href="resultados.html?id=${t.id}" class="btn-primary">Cargar resultados</a>`);
     }
+
+    if (t.estado === 'en_creacion' && t.inscritos === 0) {
+        partes.push('<button type="button" class="btn-ghost btn-danger-ghost" id="btn-borrar-borrador">Eliminar borrador</button>');
+    } else if (['en_creacion', 'abierto', 'en_curso'].includes(t.estado)) {
+        partes.push('<button type="button" class="btn-ghost btn-danger-ghost" id="btn-cancelar-torneo">Cancelar torneo</button>');
+    }
+
+    el.innerHTML = partes.join('\n');
+
+    on('#btn-iniciar-torneo', () => !$('#btn-iniciar-torneo').disabled && iniciarTorneo());
+    on('#btn-abrir-torneo', abrirTorneo);
+    on('#btn-cancelar-torneo', cancelarTorneo);
+    on('#btn-borrar-borrador', borrarBorrador);
+}
+
+function on(sel, handler) {
+    const el = $(sel);
+    if (el) el.addEventListener('click', handler);
+}
+
+// Pide a un endpoint de organizador, bloquea el botón mientras tanto y
+// recarga la ficha al terminar (salvo que se indique otra cosa en onOk).
+async function accionOrganizador(btn, { url, method = 'POST', body, confirmar, errorMsg, onOk }) {
+    if (confirmar && !confirm(confirmar)) return;
+
+    const textoOriginal = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Un momento...';
+
+    try {
+        const res  = await apiFetch(`${API_BASE_URL}/../app/tournaments/${url}`, {
+            method,
+            ...(body ? { body: JSON.stringify(body) } : {}),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+            alert(data.error || errorMsg);
+            btn.disabled = false;
+            btn.textContent = textoOriginal;
+            return;
+        }
+        onOk ? onOk(data) : init();
+    } catch (err) {
+        console.error('[detalle.js]', err);
+        alert('No se pudo conectar con el servidor.');
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+    }
+}
+
+function abrirTorneo(ev) {
+    const t = torneoActual;
+    const aviso = t.visibilidad === 'publico'
+        ? ` Como es público, se avisará a los usuarios interesados en ${t.deporte}.`
+        : '';
+    accionOrganizador(ev.currentTarget, {
+        url: 'open.php',
+        body: { torneo_id: t.id },
+        confirmar: `¿Abrir las inscripciones de "${t.titulo}"?${aviso}`,
+        errorMsg: 'No se pudo abrir el torneo.',
+    });
+}
+
+function cancelarTorneo(ev) {
+    const t = torneoActual;
+    accionOrganizador(ev.currentTarget, {
+        url: 'cancel.php',
+        body: { torneo_id: t.id },
+        confirmar: `¿Cancelar "${t.titulo}"? Se avisará a los participantes y no se puede deshacer.`,
+        errorMsg: 'No se pudo cancelar el torneo.',
+    });
+}
+
+function borrarBorrador(ev) {
+    const t = torneoActual;
+    accionOrganizador(ev.currentTarget, {
+        url: `delete.php?torneo_id=${t.id}`,
+        method: 'DELETE',
+        confirmar: `¿Eliminar el borrador "${t.titulo}"? No se puede deshacer.`,
+        errorMsg: 'No se pudo eliminar el borrador.',
+        onOk: () => { window.location.href = '../../organizador/index.html'; },
+    });
 }
 
 async function iniciarTorneo() {
@@ -246,6 +393,197 @@ async function iniciarTorneo() {
         alert('No se pudo conectar con el servidor.');
         btn.disabled = false;
         btn.textContent = 'Iniciar torneo';
+    }
+}
+
+// ── Panel "Gestionar torneo": invitar jugadores y editar ─────
+const FORMATO_A_ETIQUETA = {
+    liga:        'Liga',
+    eliminacion: 'Eliminación directa',
+    suizo:       'Sistema suizo',
+};
+
+let invitarTimer = null;
+let ultimaBusqueda = new Map();
+
+// Los elementos del panel existen siempre en el HTML: se enganchan una sola vez.
+function wireGestion() {
+    $('#t-invite-q').addEventListener('input', () => {
+        clearTimeout(invitarTimer);
+        const q = $('#t-invite-q').value.trim();
+        if (q.length < 2) {
+            $('#t-invite-results').innerHTML = '';
+            return;
+        }
+        invitarTimer = setTimeout(() => buscarInvitables(q), 300);
+    });
+
+    $('#t-invite-results').addEventListener('click', (ev) => {
+        const btn = ev.target.closest('[data-invitar]');
+        if (btn) invitar(btn);
+    });
+
+    $('#t-edit-form').addEventListener('submit', guardarEdicion);
+}
+
+function renderGestion(t) {
+    const editable = t.es_organizador && (t.estado === 'en_creacion' || t.estado === 'abierto');
+    $('#gestionar').hidden     = !editable;
+    $('#nav-gestionar').hidden = !editable;
+    if (!editable) return;
+
+    $('#t-invite-hint').textContent = t.visibilidad === 'privado'
+        ? 'Este torneo es privado: solo participan los jugadores que invites.'
+        : 'El torneo es público, pero también podés invitar jugadores directamente.';
+
+    $('#t-invite-q').value = '';
+    $('#t-invite-results').innerHTML = '';
+
+    $('#te-titulo').value     = t.titulo || '';
+    $('#te-cupo').value       = t.max_participantes || '';
+    $('#te-fecha').value      = (t.fecha_inicio || '').slice(0, 10);
+    $('#te-formato').value    = FORMATO_A_ETIQUETA[t.formato] || 'Liga';
+    $('#te-visibilidad').value = t.visibilidad === 'privado' ? 'Privado (solo con invitación)' : 'Público';
+    $('#te-desc').value       = t.descripcion || '';
+    setMsgEdicion('');
+
+    renderInvitaciones(t);
+}
+
+function setMsgEdicion(texto, tipo) {
+    const el = $('#te-msg');
+    el.textContent = texto;
+    el.classList.remove('msg-error', 'msg-ok');
+    if (tipo) el.classList.add(tipo === 'ok' ? 'msg-ok' : 'msg-error');
+}
+
+function renderInvitaciones(t) {
+    const body  = $('#t-invitaciones-body');
+    const lista = t.invitaciones || [];
+    if (!lista.length) {
+        body.innerHTML = '<tr><td colspan="2">Todavía no enviaste invitaciones.</td></tr>';
+        return;
+    }
+    const etiqueta = { pendiente: 'Pendiente', aceptada: 'Aceptada', rechazada: 'Rechazada' };
+    body.innerHTML = lista.map((i) => `
+        <tr>
+            <td><a href="../../profile/acc/view.html?id=${i.invitado_id}">${escapeHtml(i.nombre)} (@${escapeHtml(i.usuario)})</a></td>
+            <td><span class="badge badge-${escapeHtml(i.estado)}">${escapeHtml(etiqueta[i.estado] || i.estado)}</span></td>
+        </tr>
+    `).join('');
+}
+
+async function buscarInvitables(q) {
+    const ul = $('#t-invite-results');
+    try {
+        const res  = await apiFetch(`${API_BASE_URL}/../app/users/search-users.php?q=${encodeURIComponent(q)}`);
+        const data = await res.json().catch(() => ({}));
+
+        // Si el usuario siguió escribiendo, esta respuesta ya quedó vieja.
+        if (q !== $('#t-invite-q').value.trim()) return;
+
+        if (!res.ok) {
+            ul.innerHTML = `<li class="invite-empty">${escapeHtml(data.error || 'No se pudo buscar.')}</li>`;
+            return;
+        }
+
+        const t = torneoActual;
+        const excluidos = new Set([
+            Number(t.organizador_id),
+            ...(t.participantes || []).map((p) => Number(p.id)),
+            ...(t.invitaciones  || []).map((i) => Number(i.invitado_id)),
+        ]);
+        const lista = (data.users || []).filter((u) => !excluidos.has(Number(u.id)));
+
+        ultimaBusqueda = new Map(lista.map((u) => [Number(u.id), u]));
+
+        ul.innerHTML = lista.length
+            ? lista.map((u) => `
+                <li>
+                    <span class="invite-who">${escapeHtml(u.nombre)} (@${escapeHtml(u.usuario)})</span>
+                    <button type="button" class="btn-secondary btn-sm" data-invitar="${Number(u.id)}">Invitar</button>
+                </li>`).join('')
+            : '<li class="invite-empty">No hay usuarios para invitar con esa búsqueda.</li>';
+    } catch (err) {
+        console.error('[detalle.js]', err);
+        ul.innerHTML = '<li class="invite-empty">No se pudo conectar con el servidor.</li>';
+    }
+}
+
+async function invitar(btn) {
+    const id   = Number(btn.dataset.invitar);
+    const user = ultimaBusqueda.get(id);
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    try {
+        const res  = await apiFetch(`${API_BASE_URL}/../app/tournaments/invite-tournament.php`, {
+            method: 'POST',
+            body: JSON.stringify({ torneo_id: torneoActual.id, invitado_id: id }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+            alert(data.error || 'No se pudo enviar la invitación.');
+            btn.disabled = false;
+            btn.textContent = 'Invitar';
+            return;
+        }
+
+        btn.textContent = 'Invitado ✓';
+        torneoActual.invitaciones = torneoActual.invitaciones || [];
+        torneoActual.invitaciones.unshift({
+            invitado_id: id,
+            nombre:  user ? user.nombre  : '',
+            usuario: user ? user.usuario : '',
+            estado:  'pendiente',
+        });
+        renderInvitaciones(torneoActual);
+    } catch (err) {
+        console.error('[detalle.js]', err);
+        alert('No se pudo conectar con el servidor.');
+        btn.disabled = false;
+        btn.textContent = 'Invitar';
+    }
+}
+
+async function guardarEdicion(ev) {
+    ev.preventDefault();
+    const btn  = $('#btn-guardar-edicion');
+    const cupo = parseInt($('#te-cupo').value, 10);
+
+    btn.disabled = true;
+    setMsgEdicion('Guardando...');
+
+    try {
+        const res  = await apiFetch(`${API_BASE_URL}/../app/tournaments/update.php`, {
+            method: 'POST',
+            body: JSON.stringify({
+                torneo_id:         torneoActual.id,
+                titulo:            $('#te-titulo').value,
+                descripcion:       $('#te-desc').value,
+                formato:           $('#te-formato').value,
+                max_participantes: Number.isFinite(cupo) ? cupo : 0,
+                fecha_inicio:      $('#te-fecha').value,
+                visibilidad:       $('#te-visibilidad').value,
+            }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+            setMsgEdicion(data.error || 'No se pudieron guardar los cambios.', 'error');
+            btn.disabled = false;
+            return;
+        }
+
+        await init();                         // recarga la ficha con los datos nuevos
+        setMsgEdicion('Cambios guardados.', 'ok');
+        btn.disabled = false;
+    } catch (err) {
+        console.error('[detalle.js]', err);
+        setMsgEdicion('No se pudo conectar con el servidor.', 'error');
+        btn.disabled = false;
     }
 }
 

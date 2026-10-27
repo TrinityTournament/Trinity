@@ -1,14 +1,5 @@
 <?php
-// ══════════════════════════════════════════════════════════
-//  TRINITY — Admin: solicitudes para ser organizador
-//  GET                          → lista (pendientes primero)
-//  POST { id, accion }          → accion: "aprobar" | "rechazar"
-//
-//  Es la versión web de lo que el bot de WhatsApp ya hace con
-//  /aprobar N y /rechazar N (ver tournaments/organizer/resolve.php):
-//  ambos usan OrganizerService::aplicarResolucion(), así que el
-//  resultado es el mismo se responda por donde se responda.
-// ══════════════════════════════════════════════════════════
+
 require_once __DIR__ . '/../config.php';
 
 use Trinity\Core\ApiException;

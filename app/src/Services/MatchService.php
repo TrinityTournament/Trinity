@@ -529,8 +529,8 @@ class MatchService
         if (!$t) {
             throw new ApiException('No encontramos ese torneo.', 404);
         }
-        if ($t['visibilidad'] === 'privado' && (!$viewerId || (int) $t['organizador_id'] !== $viewerId)) {
-            throw new ApiException('Este torneo es privado.', 403);
+        if (!$this->tournaments->canView($t, $viewerId)) {
+            throw new ApiException('Este torneo es privado: solo lo ven quienes fueron invitados.', 403);
         }
 
         $rondas = $this->agruparPorRonda($torneoId);

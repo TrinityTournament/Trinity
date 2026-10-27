@@ -22,7 +22,16 @@ const GAMES = [
     { key: 'clashroyale', label: 'Clash Royale',  emoji: '⚔️', path: 'ClashRoyaleAPI', idField: 'tag' },
     { key: 'fortnite',    label: 'Fortnite',      emoji: '🏗️', path: 'FortniteAPI',    idField: 'username' },
     { key: 'minecraft',   label: 'Minecraft',     emoji: '🧱', path: 'MinecraftAPI',   idField: 'username' },
+    // Free Fire necesita UID + región: el servidor pide los datos de la cuenta
+    // vinculada, así que no se le pasa el identificador por la URL.
+    { key: 'freefire',    label: 'Free Fire',     emoji: '🔥', path: 'FFAPI',          idField: 'uid', statsFromAccount: true },
 ];
+
+// URL de estadísticas de un juego (con o sin identificador explícito).
+function statsUrl(game, identifier) {
+    const base = `${API_BASE_URL}/../app/videogames/${game.path}/get-stats.php`;
+    return game.statsFromAccount ? base : `${base}?${game.idField}=${encodeURIComponent(identifier)}`;
+}
 
 const state = {
     viewerId: null,
@@ -398,7 +407,7 @@ async function fetchGameCard(game) {
 
         let statsPerfil = null;
         try {
-            const statsRes  = await apiFetch(`${API_BASE_URL}/../app/videogames/${game.path}/get-stats.php?${game.idField}=${encodeURIComponent(identifier)}`);
+            const statsRes  = await apiFetch(statsUrl(game, identifier));
             const statsData = await statsRes.json().catch(() => ({}));
             if (statsRes.ok) statsPerfil = statsData.perfil;
         } catch { /* mostramos igual la cuenta vinculada aunque falle el stats */ }
@@ -428,6 +437,9 @@ function buildGameCardHtml(game, identifier, perfil) {
             }
             case 'minecraft':
                 rows += statRow('Nombre', perfil.nombre);
+                break;
+            case 'freefire':
+                rows += statRow('Jugador', perfil.nombre) + statRow('Nivel', perfil.nivel) + statRow('Región', perfil.region) + (perfil.clan ? statRow('Clan', perfil.clan.nombre) : '');
                 break;
         }
     } else {
@@ -490,12 +502,7 @@ async function openStatsPanel(name) {
     try {
         if (name === 'Fútbol') return void (content.innerHTML = renderFutbolPanel());
         if (name === 'Minecraft') return void (content.innerHTML = await renderMinecraftPanel());
-        if (name === 'Free Fire') return void (content.innerHTML = renderNoDisponiblePanel(
-            '🔥 Free Fire',
-            'Todavía no hay integración con la API de Free Fire — por ahora este juego solo se puede marcar como favorito.'
-        ));
-
-        const gameMap = { 'Brawl Stars': 'brawlstars', 'Clash Royale': 'clashroyale', 'Fortnite': 'fortnite' };
+        const gameMap = { 'Brawl Stars': 'brawlstars', 'Clash Royale': 'clashroyale', 'Fortnite': 'fortnite', 'Free Fire': 'freefire' };
         const key = gameMap[name];
         if (key) {
             content.innerHTML = await renderVideojuegoPanel(key, name);
@@ -569,6 +576,7 @@ async function renderVideojuegoPanel(key, name) {
     let bodyHtml;
     if (key === 'brawlstars')       bodyHtml = renderBrawlStarsBody(data.perfil);
     else if (key === 'clashroyale') bodyHtml = renderClashRoyaleBody(data.perfil);
+    else if (key === 'freefire')    bodyHtml = renderFreeFireBody(data.perfil);
     else                            bodyHtml = renderFortniteBody(data.perfil);
 
     const html = `
@@ -601,7 +609,7 @@ async function fetchGameDataFresh(game) {
 
         let perfil = null;
         try {
-            const statsRes  = await apiFetch(`${API_BASE_URL}/../app/videogames/${game.path}/get-stats.php?${game.idField}=${encodeURIComponent(identifier)}`);
+            const statsRes  = await apiFetch(statsUrl(game, identifier));
             const statsData = await statsRes.json().catch(() => ({}));
             if (statsRes.ok) perfil = statsData.perfil;
         } catch { /* seguimos igual, mostramos que está vinculada aunque falle el stats */ }
@@ -637,6 +645,20 @@ function renderBrawlStarsBody(p) {
             ${statBox('🎯', 'Rango', p.rangoNombre)}
             ${statBox('📈', 'Elo', p.elo)}
             ${p.club ? statBox('👥', 'Club', p.club.nombre) : ''}
+        </div>
+    `;
+}
+
+function renderFreeFireBody(p) {
+    return `
+        <div class="stats-panel-grid">
+            ${statBox('🎖️', 'Nivel', p.nivel)}
+            ${statBox('🌎', 'Región', p.region)}
+            ${statBox('🏆', 'Rango máx.', p.rangoMax)}
+            ${statBox('⚔️', 'Rango máx. Duelo de escuadras', p.rangoMaxEscuadras)}
+            ${p.clan ? statBox('👥', 'Clan', p.clan.nombre) : ''}
+            ${p.clan ? statBox('📈', 'Nivel del clan', p.clan.nivel) : ''}
+            ${p.clan && p.clan.miembros != null ? statBox('🧑‍🤝‍🧑', 'Miembros del clan', `${p.clan.miembros}${p.clan.capacidad ? '/' + p.clan.capacidad : ''}`) : ''}
         </div>
     `;
 }

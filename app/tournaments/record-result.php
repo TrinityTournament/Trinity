@@ -1,8 +1,5 @@
 <?php
-// ══════════════════════════════════════════════════════════
-//  TRINITY — Cargar el resultado de un partido (solo el organizador)
-//  POST { torneo_id, partido_id, resultado1, resultado2 }
-// ══════════════════════════════════════════════════════════
+
 require_once __DIR__ . '/../config.php';
 
 use Trinity\Core\Auth;

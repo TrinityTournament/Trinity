@@ -129,6 +129,62 @@ class TournamentModel
         });
     }
 
+    /** Última invitación de un usuario a un torneo (o null). */
+    public function findInvitationFor(int $torneoId, int $invitadoId): ?array
+    {
+        return $this->guarded(function () use ($torneoId, $invitadoId) {
+            $stmt = $this->pdo->prepare(
+                'SELECT id, estado FROM torneo_invitaciones
+                 WHERE torneo_id = :tid AND invitado_id = :uid
+                 ORDER BY id DESC LIMIT 1'
+            );
+            $stmt->execute([':tid' => $torneoId, ':uid' => $invitadoId]);
+            $row = $stmt->fetch();
+            return $row ?: null;
+        });
+    }
+
+    /** Vuelve a dejar pendiente una invitación rechazada (el organizador reinvita). */
+    public function reopenInvitation(int $invitacionId): void
+    {
+        $this->guarded(function () use ($invitacionId) {
+            $stmt = $this->pdo->prepare(
+                "UPDATE torneo_invitaciones SET estado = 'pendiente', creado_en = CURRENT_TIMESTAMP
+                 WHERE id = :id AND estado = 'rechazada'"
+            );
+            $stmt->execute([':id' => $invitacionId]);
+            return null;
+        });
+    }
+
+    /**
+     * ¿Puede $viewerId ver este torneo? Los públicos los ve cualquiera. Un
+     * torneo privado lo ven su organizador, sus participantes y quienes tienen
+     * una invitación pendiente o aceptada (el invitado necesita verlo para
+     * decidir si acepta). Es la única regla de visibilidad del sistema:
+     * TournamentService y MatchService la comparten.
+     *
+     * @param array<string,mixed> $t fila de findById()
+     */
+    public function canView(array $t, ?int $viewerId): bool
+    {
+        if (($t['visibilidad'] ?? 'publico') !== 'privado') {
+            return true;
+        }
+        if ($viewerId === null) {
+            return false;
+        }
+        if ((int) $t['organizador_id'] === $viewerId) {
+            return true;
+        }
+        $torneoId = (int) $t['id'];
+        if ($this->alreadyParticipant($torneoId, $viewerId)) {
+            return true;
+        }
+        $inv = $this->findInvitationFor($torneoId, $viewerId);
+        return $inv !== null && in_array($inv['estado'], ['pendiente', 'aceptada'], true);
+    }
+
     public function alreadyInvited(int $torneoId, int $invitadoId): bool
     {
         return $this->guarded(function () use ($torneoId, $invitadoId) {
@@ -162,6 +218,80 @@ class TournamentModel
             $stmt = $this->pdo->prepare('UPDATE torneos SET estado = :estado WHERE id = :id');
             $stmt->execute([':estado' => $estado, ':id' => $torneoId]);
             return null;
+        });
+    }
+
+    /**
+     * Cambia el estado SOLO si el torneo está hoy en uno de $desde. Es
+     * atómico (un único UPDATE con la condición), así que dos pedidos a la
+     * vez —por ejemplo "abrir" y "cancelar"— no pisan la transición del otro.
+     *
+     * @param string[] $desde
+     * @return bool true si se aplicó el cambio.
+     */
+    public function transitionEstado(int $torneoId, array $desde, string $hacia): bool
+    {
+        return $this->guarded(function () use ($torneoId, $desde, $hacia) {
+            $marks  = implode(',', array_fill(0, count($desde), '?'));
+            $stmt   = $this->pdo->prepare("UPDATE torneos SET estado = ? WHERE id = ? AND estado IN ($marks)");
+            $stmt->execute(array_merge([$hacia, $torneoId], array_values($desde)));
+            return $stmt->rowCount() > 0;
+        });
+    }
+
+    /**
+     * Actualiza solo las columnas editables que vengan en $campos.
+     * La lista blanca vive acá: aunque el service se equivoque, no se puede
+     * tocar organizador_id, deporte ni estado por esta vía.
+     *
+     * @param array<string,mixed> $campos
+     */
+    public function updateFields(int $torneoId, array $campos): void
+    {
+        $editables = ['titulo', 'descripcion', 'formato', 'max_participantes', 'fecha_inicio', 'visibilidad'];
+        $campos    = array_intersect_key($campos, array_flip($editables));
+        if (!$campos) {
+            return;
+        }
+
+        $this->guarded(function () use ($torneoId, $campos) {
+            $set    = implode(', ', array_map(fn($c) => "$c = :$c", array_keys($campos)));
+            $stmt   = $this->pdo->prepare("UPDATE torneos SET $set WHERE id = :__id");
+            foreach ($campos as $col => $val) {
+                $stmt->bindValue(":$col", $val);
+            }
+            $stmt->bindValue(':__id', $torneoId, PDO::PARAM_INT);
+            $stmt->execute();
+            return null;
+        });
+    }
+
+    /** Borra un torneo que sigue en borrador. Devuelve true si se borró. */
+    public function deleteDraft(int $torneoId): bool
+    {
+        return $this->guarded(function () use ($torneoId) {
+            $stmt = $this->pdo->prepare("DELETE FROM torneos WHERE id = :id AND estado = 'en_creacion'");
+            $stmt->execute([':id' => $torneoId]);
+            return $stmt->rowCount() > 0;
+        });
+    }
+
+    /**
+     * Invitaciones enviadas de un torneo (para el panel del organizador).
+     * @return array<int,array<string,mixed>>
+     */
+    public function listInvitations(int $torneoId): array
+    {
+        return $this->guarded(function () use ($torneoId) {
+            $stmt = $this->pdo->prepare(
+                'SELECT i.id, i.invitado_id, u.nombre, u.usuario, u.foto_url, i.estado, i.creado_en
+                 FROM   torneo_invitaciones i
+                 JOIN   usuarios u ON u.id = i.invitado_id
+                 WHERE  i.torneo_id = :id
+                 ORDER BY i.creado_en DESC, i.id DESC'
+            );
+            $stmt->execute([':id' => $torneoId]);
+            return $stmt->fetchAll();
         });
     }
 
@@ -226,7 +356,18 @@ class TournamentModel
                 'DELETE FROM torneo_participantes WHERE torneo_id = :tid AND usuario_id = :uid'
             );
             $stmt->execute([':tid' => $torneoId, ':uid' => $usuarioId]);
-            return $stmt->rowCount() > 0;
+            $salio = $stmt->rowCount() > 0;
+
+            if ($salio) {
+                // La invitación aceptada se borra: así el organizador puede volver
+                // a invitarlo y, en un torneo privado, deja de verlo si lo sacaron.
+                $inv = $this->pdo->prepare(
+                    "DELETE FROM torneo_invitaciones
+                     WHERE torneo_id = :tid AND invitado_id = :uid AND estado = 'aceptada'"
+                );
+                $inv->execute([':tid' => $torneoId, ':uid' => $usuarioId]);
+            }
+            return $salio;
         });
     }
 

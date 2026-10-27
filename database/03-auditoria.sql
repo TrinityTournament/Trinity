@@ -152,6 +152,7 @@ BEGIN
             'creado_en', t.creado_en,
             '_cascada', CONCAT('usuarios:', OLD.id)
         ), NULL, @app_ip
+    
     FROM torneos t WHERE t.organizador_id = OLD.id;
     INSERT INTO auditoria (usuario_id, tabla, registro_id, accion, datos_antes, datos_despues, ip)
     SELECT @app_user_id, 'torneo_participantes', tp.id, 'DELETE', JSON_OBJECT(

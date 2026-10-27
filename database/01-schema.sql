@@ -1,5 +1,6 @@
 -- ═══════════════════════════════════════════════════════════════════
---  TRINITY — Esquema relacional (MySQL 8.0+ / MariaDB 10.5+)
+--  TRINITY — Esquema relacional (MySQL 8.0+; este archivo también carga en MariaDB 10.5+,
+--  pero 03-auditoria.sql no: sus triggers usan CAST(... AS JSON) y requieren MySQL 8)
 -- ═══════════════════════════════════════════════════════════════════
 --
 --  NORMALIZACIÓN (forma normal aplicada por tabla)

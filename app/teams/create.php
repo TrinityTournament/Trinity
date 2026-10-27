@@ -1,9 +1,5 @@
 <?php
-// ══════════════════════════════════════════════════════════
-//  TRINITY — Crear equipo
-//  POST { nombre, disciplina, descripcion?, logo? }
-//  El creador queda como capitán automáticamente.
-// ══════════════════════════════════════════════════════════
+
 require_once __DIR__ . '/../config.php';
 
 use Trinity\Core\Auth;

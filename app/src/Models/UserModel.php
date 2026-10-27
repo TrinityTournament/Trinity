@@ -34,10 +34,25 @@ class UserModel
         return $row ?: null;
     }
 
+    /** Solo los dígitos de un teléfono ("+598 99 123 456" → "59899123456").
+      * Es el formato en el que se guarda y con el que se compara. */
+    public static function normalizePhone(string $telefono): string
+    {
+        return preg_replace('/[^0-9]/', '', $telefono) ?? '';
+    }
+
+    /** Busca por teléfono sin importar cómo se escribió ni cómo quedó guardado
+      * (con +, espacios o guiones, como las cuentas del seed): compara solo dígitos. */
     public function findByTelefono(string $telefono): ?array
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM usuarios WHERE telefono = :tel LIMIT 1');
-        $stmt->execute([':tel' => $telefono]);
+        $tel = self::normalizePhone($telefono);
+        if ($tel === '') {
+            return null;
+        }
+        $stmt = $this->pdo->prepare(
+            "SELECT * FROM usuarios WHERE REGEXP_REPLACE(telefono, '[^0-9]', '') = :tel LIMIT 1"
+        );
+        $stmt->execute([':tel' => $tel]);
         $row = $stmt->fetch();
         return $row ?: null;
     }
@@ -55,8 +70,10 @@ class UserModel
      */
     public function findByIdentifier(string $identifier): ?array
     {
-        $campo = str_contains($identifier, '@') ? 'email' : 'telefono';
-        $stmt  = $this->pdo->prepare("SELECT * FROM usuarios WHERE {$campo} = :val LIMIT 1");
+        if (!str_contains($identifier, '@')) {
+            return $this->findByTelefono($identifier);
+        }
+        $stmt = $this->pdo->prepare('SELECT * FROM usuarios WHERE email = :val LIMIT 1');
         $stmt->execute([':val' => $identifier]);
         $row = $stmt->fetch();
         return $row ?: null;
@@ -69,7 +86,19 @@ class UserModel
 
     public function existsTelefono(string $telefono, ?int $excludeId = null): bool
     {
-        return $this->existsBy('telefono', $telefono, $excludeId);
+        $tel = self::normalizePhone($telefono);
+        if ($tel === '') {
+            return false;
+        }
+        $sql    = "SELECT id FROM usuarios WHERE REGEXP_REPLACE(telefono, '[^0-9]', '') = :tel";
+        $params = [':tel' => $tel];
+        if ($excludeId !== null) {
+            $sql .= ' AND id != :exclude';
+            $params[':exclude'] = $excludeId;
+        }
+        $stmt = $this->pdo->prepare($sql . ' LIMIT 1');
+        $stmt->execute($params);
+        return (bool) $stmt->fetch();
     }
 
     public function existsUsuario(string $usuario, ?int $excludeId = null): bool

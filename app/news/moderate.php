@@ -1,9 +1,5 @@
 <?php
-// ══════════════════════════════════════════════════════════
-//  TRINITY — Moderación de noticias (solo admin)
-//  GET   → lista las noticias pendientes de aprobación
-//  PATCH { id, aprobar: bool } → aprueba (publica) o rechaza
-// ══════════════════════════════════════════════════════════
+
 require_once __DIR__ . '/../config.php';
 
 use Trinity\Core\ApiException;

@@ -59,45 +59,18 @@ class TournamentService
       * @return array<string,mixed> */
     public function create(array $organizador, string $titulo, string $deporte, string $descripcion, string $formatoInput, int $cupo, string $fecha, string $visibilidadInput, ?string $bannerUrl, bool $publicar): array
     {
-        $titulo = trim($titulo);
-        if (mb_strlen($titulo) < 3) {
-            throw new ApiException('El nombre del torneo tiene que tener al menos 3 caracteres.', 400);
-        }
-        if (mb_strlen($titulo) > 120) {
-            throw new ApiException('El nombre del torneo es demasiado largo (máximo 120 caracteres).', 400);
-        }
+        $titulo = $this->validarTitulo($titulo);
 
         $deporte = trim($deporte);
         if (!$deporte) {
             throw new ApiException('Elegí una disciplina.', 400);
         }
 
-        if ($cupo < 2) {
-            throw new ApiException('El cupo mínimo es de 2 participantes.', 400);
-        }
-        if ($cupo > 1000) {
-            throw new ApiException('El cupo máximo es de 1000 participantes.', 400);
-        }
-
-        $fechaObj = \DateTime::createFromFormat('Y-m-d', $fecha);
-        if (!$fechaObj || $fechaObj->format('Y-m-d') !== $fecha) {
-            throw new ApiException('La fecha de inicio no es válida.', 400);
-        }
-        if ($fechaObj < new \DateTime('today')) {
-            throw new ApiException('La fecha de inicio no puede ser en el pasado.', 400);
-        }
-
-        $formato = self::FORMATO_LABELS[mb_strtolower(trim($formatoInput))] ?? null;
-        if (!$formato || !in_array($formato, self::FORMATOS_VALIDOS, true)) {
-            throw new ApiException('El formato de competencia no es válido.', 400);
-        }
-
+        $this->validarCupo($cupo);
+        $this->validarFecha($fecha);
+        $formato     = $this->parseFormato($formatoInput);
         $visibilidad = self::VISIBILIDAD_LABELS[mb_strtolower(trim($visibilidadInput))] ?? 'publico';
-
-        $descripcion = trim($descripcion);
-        if (mb_strlen($descripcion) > 1000) {
-            throw new ApiException('La descripción es demasiado larga (máximo 1000 caracteres).', 400);
-        }
+        $descripcion = $this->validarDescripcion($descripcion);
 
         $estado = $publicar ? 'abierto' : 'en_creacion';
 
@@ -123,23 +96,235 @@ class TournamentService
         // Solo se avisa por email/WhatsApp si quedó público y abierto —
         // un torneo privado se maneja por invitación (ver invite()).
         if ($publicar && $visibilidad === 'publico') {
-            try {
-                $resultado['notificaciones'] = $this->notify(
-                    $titulo,
-                    $descripcion ?: "Nuevo torneo de {$deporte}.",
-                    $fecha,
-                    $deporte,
-                    'deporte',
-                    ''
-                );
-            } catch (\Throwable $e) {
-                // Un fallo al notificar no debe tirar abajo la creación ya confirmada.
-                error_log('[TournamentService::create] Error notificando: ' . $e->getMessage());
-                $resultado['notificaciones'] = ['ok' => false, 'mensaje' => 'El torneo se creó pero no se pudo avisar a los usuarios.'];
-            }
+            $resultado['notificaciones'] = $this->avisarTorneoPublico($titulo, $descripcion, $fecha, $deporte);
         }
 
         return $resultado;
+    }
+
+    /** Abre las inscripciones de un borrador (en_creacion → abierto). Si el
+      * torneo es público, avisa a los usuarios interesados en el deporte,
+      * igual que cuando se crea ya publicado.
+      * @return array<string,mixed> */
+    public function open(int $torneoId, int $organizerId): array
+    {
+        $t = $this->organizerTournamentOrFail($torneoId, $organizerId);
+
+        if ($t['estado'] !== 'en_creacion') {
+            $label = self::ESTADO_LABELS[$t['estado']] ?? $t['estado'];
+            throw new ApiException("Solo un borrador se puede abrir. Este torneo está: {$label}.", 409);
+        }
+        $fecha = substr((string) $t['fecha_inicio'], 0, 10);
+        if (new \DateTime($fecha) < new \DateTime('today')) {
+            throw new ApiException('La fecha de inicio ya pasó: editala antes de abrir las inscripciones.', 409);
+        }
+
+        if (!$this->tournaments->transitionEstado($torneoId, ['en_creacion'], 'abierto')) {
+            throw new ApiException('El torneo cambió de estado mientras tanto. Recargá la página.', 409);
+        }
+
+        $resultado = ['estado' => 'abierto', 'mensaje' => 'Inscripciones abiertas.'];
+        if ($t['visibilidad'] === 'publico') {
+            $resultado['notificaciones'] = $this->avisarTorneoPublico(
+                $t['titulo'],
+                (string) ($t['descripcion'] ?? ''),
+                $fecha,
+                $t['deporte']
+            );
+        }
+        return $resultado;
+    }
+
+    /** Edita un torneo que todavía no empezó. Solo cambia los campos que
+      * vengan en $in (titulo, descripcion, formato, max_participantes,
+      * fecha_inicio, visibilidad). La disciplina no se puede cambiar.
+      * @param array<string,mixed> $in
+      * @return array<string,mixed> */
+    public function update(int $torneoId, int $organizerId, array $in): array
+    {
+        $t = $this->organizerTournamentOrFail($torneoId, $organizerId);
+
+        if (!in_array($t['estado'], ['en_creacion', 'abierto'], true)) {
+            throw new ApiException('Solo se puede editar un torneo antes de que empiece.', 409);
+        }
+
+        $cambios = [];
+
+        if (array_key_exists('titulo', $in)) {
+            $cambios['titulo'] = $this->validarTitulo((string) $in['titulo']);
+        }
+        if (array_key_exists('descripcion', $in)) {
+            $d = $this->validarDescripcion((string) $in['descripcion']);
+            $cambios['descripcion'] = $d !== '' ? $d : null;
+        }
+        if (array_key_exists('formato', $in)) {
+            $cambios['formato'] = $this->parseFormato((string) $in['formato']);
+        }
+        if (array_key_exists('max_participantes', $in)) {
+            $cupo = (int) $in['max_participantes'];
+            $this->validarCupo($cupo);
+            $inscritos = $this->tournaments->countParticipants($torneoId);
+            if ($cupo < $inscritos) {
+                throw new ApiException("Ya hay {$inscritos} inscriptos: el cupo no puede ser menor.", 409);
+            }
+            $cambios['max_participantes'] = $cupo;
+        }
+        if (array_key_exists('fecha_inicio', $in)) {
+            $f = (string) $in['fecha_inicio'];
+            // Si no la cambió, no se le exige que sea futura (un borrador viejo
+            // puede tener la fecha vencida y editar otra cosa igual).
+            if ($f !== substr((string) $t['fecha_inicio'], 0, 10)) {
+                $this->validarFecha($f);
+            }
+            $cambios['fecha_inicio'] = $f;
+        }
+        if (array_key_exists('visibilidad', $in)) {
+            $v = self::VISIBILIDAD_LABELS[mb_strtolower(trim((string) $in['visibilidad']))] ?? null;
+            if (!$v) {
+                throw new ApiException('La visibilidad no es válida.', 400);
+            }
+            $cambios['visibilidad'] = $v;
+        }
+
+        if (!$cambios) {
+            throw new ApiException('No hay cambios para guardar.', 400);
+        }
+
+        $this->tournaments->updateFields($torneoId, $cambios);
+        return ['mensaje'   => 'Torneo actualizado.'];
+    }
+
+    /** Cancela un torneo que no terminó (en_creacion, abierto o en_curso)
+      * y avisa a los participantes.
+      * @return array<string,mixed> */
+    public function cancel(int $torneoId, int $organizerId): array
+    {
+        $t = $this->organizerTournamentOrFail($torneoId, $organizerId);
+
+        if (!$this->tournaments->transitionEstado($torneoId, ['en_creacion', 'abierto', 'en_curso'], 'cancelado')) {
+            $label = self::ESTADO_LABELS[$t['estado']] ?? $t['estado'];
+            throw new ApiException("Este torneo ya está {$label}: no se puede cancelar.", 409);
+        }
+
+        $avisados = 0;
+        foreach ($this->tournaments->listParticipants($torneoId) as $p) {
+            $this->notifications->create(
+                (int) $p['id'],
+                'torneo_cancelado',
+                'Torneo cancelado',
+                "El organizador canceló el torneo \"{$t['titulo']}\".",
+                '/pages/nav/tournament/detalle.html?id=' . $torneoId
+            );
+            $avisados++;
+        }
+
+        return ['estado' => 'cancelado', 'mensaje' => 'Torneo cancelado.', 'avisados' => $avisados];
+    }
+
+    /** Borra un borrador sin participantes. Para cualquier otro caso
+      * existe cancel(), que conserva el historial.
+      * @return array<string,mixed> */
+    public function deleteDraft(int $torneoId, int $organizerId): array
+    {
+        $t = $this->organizerTournamentOrFail($torneoId, $organizerId);
+
+        if ($t['estado'] !== 'en_creacion') {
+            throw new ApiException('Solo se pueden borrar borradores. Para un torneo ya publicado usá "Cancelar torneo".', 409);
+        }
+        if ($this->tournaments->countParticipants($torneoId) > 0) {
+            throw new ApiException('Este borrador ya tiene participantes: cancelalo en lugar de borrarlo.', 409);
+        }
+        if (!$this->tournaments->deleteDraft($torneoId)) {
+            throw new ApiException('El torneo cambió de estado mientras tanto. Recargá la página.', 409);
+        }
+
+        return ['mensaje' => 'Borrador eliminado.'];
+    }
+
+    // ── Helpers de validación y de acceso ──────────────────────────
+
+    /** Torneo completo, exigiendo que $organizerId sea su organizador. */
+    private function organizerTournamentOrFail(int $torneoId, int $organizerId): array
+    {
+        $t = $torneoId > 0 ? $this->tournaments->findById($torneoId) : null;
+        if (!$t) {
+            throw new ApiException('No encontramos ese torneo.', 404);
+        }
+        if ((int) $t['organizador_id'] !== $organizerId) {
+            throw new ApiException('Solo el organizador puede hacer esto.', 403);
+        }
+        return $t;
+    }
+
+    private function validarTitulo(string $titulo): string
+    {
+        $titulo = trim($titulo);
+        if (mb_strlen($titulo) < 3) {
+            throw new ApiException('El nombre del torneo tiene que tener al menos 3 caracteres.', 400);
+        }
+        if (mb_strlen($titulo) > 120) {
+            throw new ApiException('El nombre del torneo es demasiado largo (máximo 120 caracteres).', 400);
+        }
+        return $titulo;
+    }
+
+    private function validarCupo(int $cupo): void
+    {
+        if ($cupo < 2) {
+            throw new ApiException('El cupo mínimo es de 2 participantes.', 400);
+        }
+        if ($cupo > 1000) {
+            throw new ApiException('El cupo máximo es de 1000 participantes.', 400);
+        }
+    }
+
+    private function validarFecha(string $fecha): void
+    {
+        $fechaObj = \DateTime::createFromFormat('Y-m-d', $fecha);
+        if (!$fechaObj || $fechaObj->format('Y-m-d') !== $fecha) {
+            throw new ApiException('La fecha de inicio no es válida.', 400);
+        }
+        if ($fechaObj < new \DateTime('today')) {
+            throw new ApiException('La fecha de inicio no puede ser en el pasado.', 400);
+        }
+    }
+
+    private function parseFormato(string $input): string
+    {
+        $formato = self::FORMATO_LABELS[mb_strtolower(trim($input))] ?? null;
+        if (!$formato || !in_array($formato, self::FORMATOS_VALIDOS, true)) {
+            throw new ApiException('El formato de competencia no es válido.', 400);
+        }
+        return $formato;
+    }
+
+    private function validarDescripcion(string $descripcion): string
+    {
+        $descripcion = trim($descripcion);
+        if (mb_strlen($descripcion) > 1000) {
+            throw new ApiException('La descripción es demasiado larga (máximo 1000 caracteres).', 400);
+        }
+        return $descripcion;
+    }
+
+    /** Aviso masivo por email/WhatsApp de un torneo público recién abierto.
+      * Un fallo al avisar NUNCA debe deshacer la acción ya confirmada.
+      * @return array<string,mixed> */
+    private function avisarTorneoPublico(string $titulo, string $descripcion, string $fecha, string $deporte): array
+    {
+        try {
+            return $this->notify(
+                $titulo,
+                $descripcion !== '' ? $descripcion : "Nuevo torneo de {$deporte}.",
+                $fecha,
+                $deporte,
+                'deporte',
+                ''
+            );
+        } catch (\Throwable $e) {
+            error_log('[TournamentService] Error notificando: ' . $e->getMessage());
+            return ['ok' => false, 'mensaje' => 'El torneo quedó abierto pero no se pudo avisar a los usuarios.'];
+        }
     }
 
     /** Ficha completa de un torneo para detalle.html: info + lista de
@@ -153,17 +338,23 @@ class TournamentService
             throw new ApiException('No encontramos ese torneo.', 404);
         }
 
-        if ($t['visibilidad'] === 'privado' && (!$viewerId || (int) $t['organizador_id'] !== $viewerId)) {
-            // Un torneo privado solo lo puede ver su organizador (o alguien
-            // invitado — de momento no distinguimos eso acá, ver nota en
-            // CAMBIOS.md sobre el alcance de las invitaciones).
-            throw new ApiException('Este torneo es privado.', 403);
+        if (!$this->tournaments->canView($t, $viewerId)) {
+            throw new ApiException('Este torneo es privado: solo lo ven quienes fueron invitados.', 403);
         }
 
         $participantes = $this->tournaments->listParticipants($torneoId);
         $inscritos     = count($participantes);
         $esOrganizador = $viewerId !== null && (int) $t['organizador_id'] === $viewerId;
         $yaInscripto   = $viewerId !== null && $this->tournaments->alreadyParticipant($torneoId, $viewerId);
+
+        // Invitación pendiente del que mira (para mostrarle Aceptar / Rechazar).
+        $invitacionId = null;
+        if ($viewerId !== null && !$esOrganizador) {
+            $inv = $this->tournaments->findInvitationFor($torneoId, $viewerId);
+            if ($inv && $inv['estado'] === 'pendiente') {
+                $invitacionId = (int) $inv['id'];
+            }
+        }
 
         return [
             'id'                 => (int) $t['id'],
@@ -185,10 +376,12 @@ class TournamentService
             'inscritos'          => $inscritos,
             'participantes'      => $participantes,
             'es_organizador'     => $esOrganizador,
+            'invitaciones'       => $esOrganizador ? $this->tournaments->listInvitations($torneoId) : [],
             'ya_inscripto'       => $yaInscripto,
+            'invitacion_id'      => $invitacionId,
             'logueado'           => $viewerId !== null,
             'cupo_lleno'         => $t['max_participantes'] !== null && $inscritos >= (int) $t['max_participantes'],
-            'inscripcion_abierta' => $t['estado'] === 'abierto',
+            'inscripcion_abierta' => $t['estado'] === 'abierto' && ($t['visibilidad'] !== 'privado' || $invitacionId !== null),
         ];
     }
 
@@ -230,6 +423,15 @@ class TournamentService
         }
         if ($this->tournaments->alreadyParticipant($torneoId, $userId)) {
             throw new ApiException('Ya estás inscripto en este torneo.', 409);
+        }
+        if ($t['visibilidad'] === 'privado') {
+            // Un torneo privado no admite inscripción libre: se entra aceptando
+            // una invitación (resolveInvitation también controla el cupo).
+            $inv = $this->tournaments->findInvitationFor($torneoId, $userId);
+            if (!$inv || $inv['estado'] !== 'pendiente') {
+                throw new ApiException('Este torneo es privado: solo se puede entrar con una invitación.', 403);
+            }
+            return $this->resolveInvitation((int) $inv['id'], $userId, true);
         }
         if ($t['max_participantes'] !== null && $this->tournaments->countParticipants($torneoId) >= (int) $t['max_participantes']) {
             throw new ApiException('El cupo de este torneo ya está completo.', 409);
@@ -316,6 +518,12 @@ class TournamentService
             return ['mensaje' => 'Ya estabas inscripto en ese torneo.'];
         }
 
+        $torneo = $this->tournaments->findById((int) $inv['torneo_id']);
+        if ($torneo && $torneo['max_participantes'] !== null
+            && $this->tournaments->countParticipants((int) $inv['torneo_id']) >= (int) $torneo['max_participantes']) {
+            throw new ApiException('El cupo de este torneo ya está completo.', 409);
+        }
+
         $this->tournaments->registerParticipant((int) $inv['torneo_id'], $userId);
         $this->tournaments->resolveInvitation($invitacionId, 'aceptada');
 
@@ -375,15 +583,9 @@ class TournamentService
             throw new ApiException('No encontramos ese torneo entre los que estás organizando.', 404);
         }
 
-        if ($torneo['estado'] !== 'en_creacion') {
-            $labels = [
-                'abierto'    => 'abierto para inscripciones',
-                'en_curso'   => 'en curso',
-                'finalizado' => 'finalizado',
-                'cancelado'  => 'cancelado',
-            ];
-            $label = $labels[$torneo['estado']] ?? $torneo['estado'];
-            throw new ApiException("Solo podés invitar cuando el torneo está en proceso de creación. Este torneo está {$label}.", 409);
+        if (!in_array($torneo['estado'], ['en_creacion', 'abierto'], true)) {
+            $label = self::ESTADO_LABELS[$torneo['estado']] ?? $torneo['estado'];
+            throw new ApiException("Solo podés invitar antes de que el torneo empiece. Este torneo está: {$label}.", 409);
         }
 
         $invitado = $this->users->findById($invitadoId);
@@ -391,20 +593,26 @@ class TournamentService
             throw new ApiException('El usuario al que querés invitar no existe.', 404);
         }
 
-        if ($this->tournaments->alreadyInvited($torneoId, $invitadoId)) {
-            throw new ApiException('Este usuario ya fue invitado a ese torneo.', 409);
-        }
         if ($this->tournaments->alreadyParticipant($torneoId, $invitadoId)) {
             throw new ApiException('Este usuario ya está inscripto en ese torneo.', 409);
         }
+        $previa = $this->tournaments->findInvitationFor($torneoId, $invitadoId);
+        if ($previa && $previa['estado'] === 'pendiente') {
+            throw new ApiException('Este usuario ya fue invitado a ese torneo.', 409);
+        }
 
-        $this->tournaments->insertInvitation($torneoId, $organizadorId, $invitadoId);
+        if ($previa && $previa['estado'] === 'rechazada') {
+            $this->tournaments->reopenInvitation((int) $previa['id']);   // reinvitación
+        } else {
+            $this->tournaments->insertInvitation($torneoId, $organizadorId, $invitadoId);
+        }
 
         $this->notifications->create(
             $invitadoId,
             'torneo_invitacion',
             "Te invitaron al torneo \"{$torneo['titulo']}\"",
-            "{$orgNombre} (@{$orgUsuario}) te envió una invitación. ¡Ingresá para aceptarla o rechazarla!"
+            "{$orgNombre} (@{$orgUsuario}) te envió una invitación. ¡Ingresá para aceptarla o rechazarla!",
+            '/pages/nav/tournament/detalle.html?id=' . $torneoId
         );
 
         return ['mensaje' => "Invitación enviada a {$invitado['nombre']}."];

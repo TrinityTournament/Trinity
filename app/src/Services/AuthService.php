@@ -83,8 +83,14 @@ class AuthService
       * enumerar cuentas registradas.
       *
       * @return array<string,mixed> */
-    public function requestPasswordReset(string $email): array
+    public function requestPasswordReset(string $email, string $telefono = ''): array
     {
+        // Por teléfono: para cuentas registradas solo con WhatsApp (no tienen email
+        // donde recibir el link). Usa el mismo token de un solo uso que el email.
+        if ($email === '' && $telefono !== '') {
+            return $this->requestPasswordResetByPhone($telefono);
+        }
+
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new ApiException('Email inválido.', 400);
         }
@@ -94,15 +100,8 @@ class AuthService
             return [];
         }
 
-        $userId = (int) $user['id'];
-        $this->resets->invalidateAllForUser($userId);
-
-        $token  = bin2hex(random_bytes(32));
-        $expira = date('Y-m-d H:i:s', time() + 900); // 15 minutos
-        $this->resets->create($userId, $token, $expira);
-
-        $baseUrl  = rtrim(Env::get('APP_URL', 'http://localhost'), '/');
-        $resetUrl = $baseUrl . '/pages/reset-password/index.html?token=' . $token;
+        $userId   = (int) $user['id'];
+        $resetUrl = $this->createResetUrl($userId);
 
         $html = "
             <div style='font-family:sans-serif;max-width:520px;margin:auto;padding:40px;background:#1f1717;border-radius:14px;color:#f0f4ff;'>
@@ -129,15 +128,58 @@ class AuthService
         }
 
         if (!empty($user['telefono'])) {
-            $waMsg = "*TRINITY*\n\n"
-                   . "Recibimos una solicitud para cambiar la contraseña de tu cuenta.\n\n"
-                   . "🔗 {$resetUrl}\n\n"
-                   . "⏱ Este link expira en 15 minutos y es de uso unico.\n"
-                   . "Si no fuiste vos, ignorá este mensaje.";
-            WhatsAppClient::send($user['telefono'], $waMsg);
+            $this->sendResetLinkByWhatsApp($user['telefono'], $resetUrl);
         }
 
         return [];
+    }
+
+    /** Recuperación por teléfono: manda el link de restablecimiento por WhatsApp.
+      * Igual que con el email, si el número no existe responde OK sin enviar nada
+      * (no se puede usar para descubrir qué teléfonos están registrados).
+      * @return array<string,mixed> */
+    private function requestPasswordResetByPhone(string $telefono): array
+    {
+        if (strlen(UserModel::normalizePhone($telefono)) < 7) {
+            throw new ApiException('Número de teléfono inválido.', 400);
+        }
+
+        $user = $this->users->findByTelefono($telefono);
+        if (!$user) {
+            return [];
+        }
+
+        $resetUrl = $this->createResetUrl((int) $user['id']);
+
+        if (!$this->sendResetLinkByWhatsApp($user['telefono'], $resetUrl)) {
+            throw new ApiException('No se pudo enviar el mensaje por WhatsApp. Intentá de nuevo en un rato.', 503);
+        }
+
+        return [];
+    }
+
+    /** Invalida los tokens anteriores del usuario, crea uno nuevo (15 min,
+      * un solo uso) y devuelve el link completo para restablecer. */
+    private function createResetUrl(int $userId): string
+    {
+        $this->resets->invalidateAllForUser($userId);
+
+        $token  = bin2hex(random_bytes(32));
+        $expira = date('Y-m-d H:i:s', time() + 900); // 15 minutos
+        $this->resets->create($userId, $token, $expira);
+
+        $baseUrl = rtrim(Env::get('APP_URL', 'http://localhost'), '/');
+        return $baseUrl . '/pages/reset-password/index.html?token=' . $token;
+    }
+
+    private function sendResetLinkByWhatsApp(string $telefono, string $resetUrl): bool
+    {
+        $waMsg = "*TRINITY*\n\n"
+               . "Recibimos una solicitud para cambiar la contraseña de tu cuenta.\n\n"
+               . "🔗 {$resetUrl}\n\n"
+               . "⏱ Este link expira en 15 minutos y es de uso unico.\n"
+               . "Si no fuiste vos, ignorá este mensaje.";
+        return WhatsAppClient::send($telefono, $waMsg);
     }
 
     /**

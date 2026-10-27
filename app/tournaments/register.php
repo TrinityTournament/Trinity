@@ -1,9 +1,5 @@
 <?php
-// ══════════════════════════════════════════════════════════
-//  TRINITY — Inscripción a torneo
-//  POST   { torneo_id }  → inscribe al usuario logueado
-//  DELETE ?torneo_id=123 → cancela su inscripción
-// ══════════════════════════════════════════════════════════
+
 require_once __DIR__ . '/../config.php';
 
 use Trinity\Core\ApiException;

@@ -1,8 +1,5 @@
 <?php
-// ══════════════════════════════════════════════════════════
-//  TRINITY — Eliminar cuenta
-//  POST { password } — pide la contraseña actual como confirmación.
-// ══════════════════════════════════════════════════════════
+
 require_once __DIR__ . '/../config.php';
 
 use Trinity\Core\Auth;

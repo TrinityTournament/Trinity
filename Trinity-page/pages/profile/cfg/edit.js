@@ -396,9 +396,13 @@ async function loadGameAccount(form) {
 
         const value = data[field];
         if (value) {
-            currentEl.textContent = `Vinculada: ${value}`;
+            // Algunos juegos (Free Fire) además guardan un dato extra: la región.
+            const extra  = form.querySelector('[data-role="extra"]');
+            const extraV = extra ? data[extra.dataset.field] : null;
+            currentEl.textContent = `Vinculada: ${value}${extraV ? ` (${extraV})` : ''}`;
             currentEl.classList.add('linked');
             form.querySelector('[data-role="input"]').value = value;
+            if (extra && extraV) extra.value = extraV;
         }
     } catch (err) {
         console.error('[edit.js]', err);
@@ -419,20 +423,25 @@ async function saveGameAccount(form) {
         return;
     }
 
+    const extra   = form.querySelector('[data-role="extra"]');   // ej. región de Free Fire
+    const payload = { [field]: value };
+    if (extra) payload[extra.dataset.field] = extra.value;
+
     btn.disabled = true;
     setInlineMsg(msgEl, 'Vinculando...', null);
 
     try {
         const res  = await apiFetch(`${API_BASE_URL}/../app/videogames/${path}/save-account.php`, {
             method: 'POST',
-            body: JSON.stringify({ [field]: value }),
+            body: JSON.stringify(payload),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
             setInlineMsg(msgEl, data.error || 'No se pudo vincular.', 'err');
         } else {
             const saved = data[field] || value;
-            currentEl.textContent = `Vinculada: ${saved}`;
+            const extraSaved = extra ? (data[extra.dataset.field] || extra.value) : null;
+            currentEl.textContent = `Vinculada: ${saved}${extraSaved ? ` (${extraSaved})` : ''}`;
             currentEl.classList.add('linked');
             input.value = saved;
             setInlineMsg(msgEl, 'Cuenta vinculada correctamente.', 'ok');

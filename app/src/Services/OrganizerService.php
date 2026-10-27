@@ -150,9 +150,6 @@ class OrganizerService
         return ['mensaje' => $r['mensaje'], 'estado' => (string) $r['estado']];
     }
 
-    /** Lógica común del bot y del panel web.
-      *
-      * @return array{ok:bool, mensaje:string, codigo:int, estado:?string} */
     private function aplicarResolucion(int $adminId, int $solicitudId, string $accion): array
     {
         $solicitud = $this->requests->find($solicitudId);
